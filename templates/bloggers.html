@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% block content %}
+<table>
+	<tr>
+		<th>Who</th>
+		<th>Blogs</th>
+		<th>Started</th>
+	</tr>
+	{% for blogger in bloggers %}
+	<tr>
+		<td>{{ blogger.name }}</td>
+		<td>
+			<ul>
+			{% for blog in blogger.blogs %}
+				<li><a href="{{ blog.url }}">{{ blog.title }}</a></li>
+			{% endfor %}
+			</ul>
+		</td>
+		<td>{{ blogger.start_date }}</td>
+	</tr>
+	{% endfor %}
+</table>
+{% endblock %}
