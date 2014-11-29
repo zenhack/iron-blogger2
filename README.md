@@ -24,7 +24,7 @@ The old `bloggers.yml` file may be imported via:
 
     python -m iron_blogger2.import_bloggers < bloggers.yml
 
-The database is currently created within the iron_blogger module
+The database is currently created within the iron_blogger2 module
 directory. This is considered a bug, and will be fixed soon.
 
 Iron Blogger 2 is Free Software, released under the GPL3. A list of
