@@ -15,6 +15,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>
 from datetime import date
 import time
+from hashlib import sha1
+import codecs
 
 from flask import Flask, render_template
 from flask.ext.sqlalchemy import SQLAlchemy
@@ -64,15 +66,23 @@ class Blog(db.Model):
     def sync_posts(self):
         feed = feedparser.parse(self.feed_url)
         for entry in feed.entries:
-            # FIXME: we need a way of de-duping posts which are already in the
-            # database.
-            self.posts.append(Post.from_feed_entry(entry))
+            post = Post.from_feed_entry(entry)
+            post.blog = self
+            db.session.add(post)
+        db.session.commit()
 
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'), nullable=False)
     date = db.Column(db.Date, nullable=False)
+    title = db.Column(db.String(VCHAR_DEFAULT), nullable=False)
+    # fingerprint is a sha1 hash of <pubdate in unixtime>:<title in utf-8>.
+    # This is used for deduping posts. We ought to just use those fields
+    # directly, but that requires a bit of restructuring of the control flow,
+    # which I (Ian) will do later.
+    fingerprint = db.Column(db.String(len(sha1('').hexdigest())),
+                            nullable=False, unique=True)
     blog = db.relationship('Blog', backref=db.backref('posts'))
 
     @staticmethod
@@ -100,8 +110,21 @@ class Post(db.Model):
 
         If the post is invalid, raise a ``MalformedPostError`.
         """
-        post = Post()
-        post.date = Post._get_pub_date(entry)
+        if 'title' not in entry:
+            raise MalformedPostError("Post has no title: %r" % entry)
+        title = entry['title']
+        post_date = Post._get_pub_date(entry)
+
+        fingerprint = sha1('%s:%s' % (post_date.strftime('%s'),
+                                         codecs.encode(title, 'utf-8'))).hexdigest()
+
+        post = db.session.query(Post).filter_by(fingerprint=fingerprint).first()
+        if post is None:
+            post = Post()
+            post.fingerprint = fingerprint
+            post.date = post_date
+            post.title = title
+
         return post
 
 
