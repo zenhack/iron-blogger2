@@ -20,6 +20,9 @@ from flask import Flask, render_template
 from flask.ext.sqlalchemy import SQLAlchemy
 import feedparser
 
+VCHAR_DEFAULT = 255  # Default length of string/varchar columns.
+                     # This might not actually be enough for some urls.
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///iron-blogger.db'
 db = SQLAlchemy(app)
@@ -31,7 +34,7 @@ class MalformedPostError(Exception):
 
 class Blogger(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255), nullable=False, unique=True)
+    name = db.Column(db.String(VCHAR_DEFAULT), nullable=False, unique=True)
     start_date = db.Column(db.Date, nullable=False)
 
     def __init__(self, name, start_date, blogs=None):
@@ -47,9 +50,9 @@ class Blog(db.Model):
                            nullable=False)
     blogger = db.relationship('Blogger', backref=db.backref('blogs'))
 
-    title = db.Column(db.String(255), nullable=False)
-    page_url = db.Column(db.String(255), nullable=False)
-    feed_url = db.Column(db.String(255), nullable=False)
+    title = db.Column(db.String(VCHAR_DEFAULT), nullable=False)
+    page_url = db.Column(db.String(VCHAR_DEFAULT), nullable=False)
+    feed_url = db.Column(db.String(VCHAR_DEFAULT), nullable=False)
 
     def __init__(self, title, page_url, feed_url, blogger=None):
         self.title = title
