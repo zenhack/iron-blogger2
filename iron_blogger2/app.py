@@ -133,6 +133,11 @@ def show_bloggers():
     return render_template('bloggers.html',
                            bloggers=db.session.query(Blogger).all())
 
+@app.route('/planet')
+def show_planet():
+    posts = db.session.query(Post).order_by(Post.date.desc())
+    return render_template('planet.html', posts=posts)
+
 
 if __name__ == '__main__':
     app.run(debug=True)

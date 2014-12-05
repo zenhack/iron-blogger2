@@ -1,0 +1,9 @@
+{% extends "layout.html" %}
+{% block content %}
+{% for post in posts %}
+<div>
+	{{ post.date }} - <a href="{{ post.blog.page_url }}">{{ post.blog.title }}</a>
+	-- {{ post.title }} by {{ post.blog.blogger.name }}
+</div>
+{% endfor %}
+{% endblock %}
