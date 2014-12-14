@@ -67,8 +67,17 @@ class Blog(db.Model):
         feed = feedparser.parse(self.feed_url)
         for entry in feed.entries:
             post = Post.from_feed_entry(entry)
-            post.blog = self
-            db.session.add(post)
+            # Check if we already have this post in the database.
+            # We use the combination of blog, date, and title as
+            # a unique identifier.
+            old_post = db.session.query(Post).filter_by(
+                    blog=self,
+                    date=post.date,
+                    title=post.title,
+                    ).first()
+            if old_post is None:
+                post.blog = self
+                db.session.add(post)
         db.session.commit()
 
 
@@ -77,12 +86,6 @@ class Post(db.Model):
     blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'), nullable=False)
     date = db.Column(db.Date, nullable=False)
     title = db.Column(db.String(VCHAR_DEFAULT), nullable=False)
-    # fingerprint is a sha1 hash of <pubdate in unixtime>:<title in utf-8>.
-    # This is used for deduping posts. We ought to just use those fields
-    # directly, but that requires a bit of restructuring of the control flow,
-    # which I (Ian) will do later.
-    fingerprint = db.Column(db.String(len(sha1('').hexdigest())),
-                            nullable=False, unique=True)
     blog = db.relationship('Blog', backref=db.backref('posts'))
 
     @staticmethod
@@ -109,21 +112,16 @@ class Post(db.Model):
         ``entry`` should be a post object as returned by ``feedparser.parse``.
 
         If the post is invalid, raise a ``MalformedPostError`.
+
+        This leaves the `blog` field emtpy; this must be filled in before the
+        post is added to the database.
         """
         if 'title' not in entry:
             raise MalformedPostError("Post has no title: %r" % entry)
         title = entry['title']
-        post_date = Post._get_pub_date(entry)
-
-        fingerprint = sha1('%s:%s' % (post_date.strftime('%s'),
-                                         codecs.encode(title, 'utf-8'))).hexdigest()
-
-        post = db.session.query(Post).filter_by(fingerprint=fingerprint).first()
-        if post is None:
-            post = Post()
-            post.fingerprint = fingerprint
-            post.date = post_date
-            post.title = title
+        post = Post()
+        post.date = Post._get_pub_date(entry)
+        post.title = title
 
         return post
 
