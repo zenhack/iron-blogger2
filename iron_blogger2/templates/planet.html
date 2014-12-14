@@ -3,7 +3,7 @@
 {% for post in posts %}
 <div>
 	{{ post.date }} - <a href="{{ post.blog.page_url }}">{{ post.blog.title }}</a>
-	-- {{ post.title }} by {{ post.blog.blogger.name }}
+	-- <a href="{{ post.page_url }}">{{ post.title }}</a> by {{ post.blog.blogger.name }}
 </div>
 {% endfor %}
 {% endblock %}

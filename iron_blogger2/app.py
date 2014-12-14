@@ -86,6 +86,7 @@ class Post(db.Model):
     blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'), nullable=False)
     date = db.Column(db.Date, nullable=False)
     title = db.Column(db.String(VCHAR_DEFAULT), nullable=False)
+    page_url = db.Column(db.String(VCHAR_DEFAULT), nullable=False)
     blog = db.relationship('Blog', backref=db.backref('posts'))
 
     @staticmethod
@@ -118,10 +119,13 @@ class Post(db.Model):
         """
         if 'title' not in entry:
             raise MalformedPostError("Post has no title: %r" % entry)
+        if 'link' not in entry:
+            raise MalformedPostError("Post has no url: %r" % entry)
         title = entry['title']
         post = Post()
         post.date = Post._get_pub_date(entry)
         post.title = title
+        post.page_url = entry['link']
 
         return post
 
