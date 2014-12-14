@@ -1,3 +1,5 @@
 *.db
 *.pyc
+.venv
+*.egg-info
 bloggers.yml
