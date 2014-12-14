@@ -24,6 +24,6 @@ setup(name='iron-blogger2',
       version='0.1',
       url='https://github.com/zenhack/iron-blogger2',
       packages=find_packages(),
-      scripts=['scripts/iron-blogger2'],
+      scripts=['scripts/ironblogger'],
       install_requires=reqs,
       )

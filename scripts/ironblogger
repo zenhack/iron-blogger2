@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Copyright 2014 Ian Denhardt <ian@zenhack.net>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -12,8 +13,15 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>
+
+from iron_blogger2.app import *
+import sys
 import yaml
-from app import *
+
+def sync_posts():
+    blogs = db.session.query(Blog).all()
+    for blog in blogs:
+        blog.sync_posts()
 
 
 def import_bloggers(file):
@@ -56,6 +64,35 @@ def import_bloggers(file):
     session.commit()
 
 
+def usage(exit_status=1):
+    usage = '\n'.join([
+        "Usage:",
+        "",
+        "    ironblogger import         # import bloggers from yaml file.",
+        "    ironblogger serve          # start the app server (in debug mode).",
+        "    ironblogger sync-posts     # syncronize posts with blogs.",
+        "    ironblogger help           # show this help message.",
+        "    ironblogger help <command> # show detailed help for <command>.",
+    ])
+    print(usage)
+    sys.exit(exit_status)
+
+def show_help(*args):
+    if len(args) == 0:
+        usage(0)
+    else:
+        print("command help not yet implemented")
+
+def main():
+    if len(sys.argv) < 2:
+        usage()
+    commands = {
+        'help': lambda: show_help(*sys.argv[2:]),
+        'import': lambda: import_bloggers(sys.stdin),
+        'serve': lambda: app.run(debug=True),
+        'sync-posts': sync_posts,
+    }
+    commands[sys.argv[1]]()
+
 if __name__ == '__main__':
-    import sys
-    import_bloggers(sys.stdin)
+    main()
