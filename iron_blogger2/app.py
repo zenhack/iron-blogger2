@@ -32,6 +32,7 @@ class MalformedPostError(Exception):
 
 
 class Blogger(db.Model):
+    """An Iron Blogger participant."""
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(VCHAR_DEFAULT), nullable=False, unique=True)
     start_date = db.Column(db.Date, nullable=False)
@@ -44,13 +45,17 @@ class Blogger(db.Model):
 
 
 class Blog(db.Model):
+    """A blog. bloggers may have more than one of these."""
     id = db.Column(db.Integer, primary_key=True)
     blogger_id = db.Column(db.Integer, db.ForeignKey('blogger.id'),
                            nullable=False)
     blogger = db.relationship('Blogger', backref=db.backref('blogs'))
-
     title = db.Column(db.String(VCHAR_DEFAULT), nullable=False)
+
+    # Human readable webpage:
     page_url = db.Column(db.String(VCHAR_DEFAULT), nullable=False)
+
+    # Atom/RSS feed:
     feed_url = db.Column(db.String(VCHAR_DEFAULT), nullable=False)
 
     def __init__(self, title, page_url, feed_url, blogger=None):
@@ -92,11 +97,17 @@ class Blog(db.Model):
 
 
 class Post(db.Model):
+    """A blog post."""
     id = db.Column(db.Integer, primary_key=True)
     blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'), nullable=False)
     date = db.Column(db.Date, nullable=False)
     title = db.Column(db.String(VCHAR_DEFAULT), nullable=False)
+
+    # The *sanitized* description/summary field from the feed entry. This will
+    # be copied directly to the generated html, so sanitization is critical.
     summary = db.Column(db.Text, nullable=False)
+
+    # URL for the HTML version of the post.
     page_url = db.Column(db.String(VCHAR_DEFAULT), nullable=False)
     blog = db.relationship('Blog', backref=db.backref('posts'))
 
