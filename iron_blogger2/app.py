@@ -141,10 +141,16 @@ class Post(db.Model):
         return post
 
 
+@app.route('/')
+def show_index():
+    return render_template('index.html')
+
+
 @app.route('/bloggers')
 def show_bloggers():
     return render_template('bloggers.html',
                            bloggers=db.session.query(Blogger).all())
+
 
 @app.route('/all-posts')
 def show_all_posts():
