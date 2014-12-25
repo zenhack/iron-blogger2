@@ -62,20 +62,33 @@ class Blog(db.Model):
             self.blogger = blogger
 
     def sync_posts(self):
+        last_post = db.session.query(Post)\
+            .filter_by(blog=self)\
+            .order_by(Post.date.desc()).first()
         feed = feedparser.parse(self.feed_url)
-        for entry in feed.entries:
-            post = Post.from_feed_entry(entry)
-            # Check if we already have this post in the database.
-            # We use the combination of blog, date, and title as
-            # a unique identifier.
-            old_post = db.session.query(Post).filter_by(
-                    blog=self,
-                    date=post.date,
-                    title=post.title,
-                    ).first()
-            if old_post is None:
-                post.blog = self
-                db.session.add(post)
+        feed_posts = map(Post.from_feed_entry, feed.entries)
+
+        # The loop below assumes our feed entries are sorted by date, newest
+        # first. This ensures just that:
+        feed_posts = sorted([(post.date, post) for post in feed_posts])
+        feed_posts = [post for (_date, post) in feed_posts]
+
+        for post in feed_posts:
+            # Check if the post is already in the db:
+            if last_post is not None:
+                if post.date < last_post.date:
+                    # We can stop storing posts when we get to one that's older
+                    # than one we already have. Note that we can't do less than
+                    # or equal here, since someone might post more than one
+                    # post in a day.
+                    break
+                    # If a post has the same date as one already in the db (on
+                    # the same blog), we use the title as an identifier.
+                if post.date == last_post.date and post.title == last_post.title:
+                    break
+
+            post.blog = self
+            db.session.add(post)
         db.session.commit()
 
 
