@@ -18,7 +18,15 @@ from iron_blogger2.app import *
 import sys
 import yaml
 
+# This loads the app config:
+import wsgi
+
+def _app_context():
+    app.test_request_context().push()
+
+
 def sync_posts():
+    _app_context()
     blogs = db.session.query(Blog).all()
     for blog in blogs:
         blog.sync_posts()
@@ -46,6 +54,7 @@ def import_bloggers(file):
     ``import_bloggers`` will create the database if it does not exist, and
     populat it with the contents of ``file``.
     """
+    _app_context()
     db.create_all()
     session = db.session
 

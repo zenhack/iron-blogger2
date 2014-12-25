@@ -4,4 +4,5 @@
 *.egg-info
 build
 dist
+wsgi.py
 bloggers.yml

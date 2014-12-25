@@ -24,8 +24,7 @@ VCHAR_DEFAULT = 255  # Default length of string/varchar columns.
                      # This might not actually be enough for some urls.
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///iron-blogger.db'
-db = SQLAlchemy(app)
+db = SQLAlchemy()
 
 
 class MalformedPostError(Exception):
@@ -156,7 +155,3 @@ def show_bloggers():
 def show_all_posts():
     posts = db.session.query(Post).order_by(Post.date.desc())
     return render_template('all-posts.html', posts=posts)
-
-
-if __name__ == '__main__':
-    app.run(debug=True)

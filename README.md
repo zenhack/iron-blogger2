@@ -11,18 +11,23 @@ As of right now Iron Blogger 2 can do the following:
 * display a page equivalent to
   <http://boston.iron-blogger.com/pages/participants/> (though
   participants not in good standing are not currently supported).
-* display a *very* rough aggregation of blog posts. The intention is to 
+* display a *very* rough aggregation of blog posts. The intention is to
   use (a more mature version of) this instead of planet.
+
+# Getting Started
+
+Copy `example.wsgi.py` to `wsgi.py` and edit the configuration therein.
+Right now the only interesting setting is the path to the database. The
+`ironblogger` command described below must be run from within the same
+directory as `wsgi.py`.
 
 Iron Blogger 2 is a [Flask][2] app. A stand-alone development server can
 be started with:
 
-    python -m iron_blogger2.app
+    ironblogger serve
 
-At which point, the pages mentioned above will be available at
-
-* <http://localhost:5000/bloggers>
-* <http://localhost:5000/planet>
+At which point, the application will be available at
+<http://localhost:5000>.
 
 Support for generating a static site may be added in the near future --
 there is no requirement for dynamic content given the features of the
@@ -30,16 +35,13 @@ original software.
 
 The old `bloggers.yml` file may be imported via:
 
-    python -m iron_blogger2.import_bloggers < bloggers.yml
+    ironblogger import < bloggers.yml
 
 This will also create the database. Once the database exists,
 
-    python -m sync_posts
+    ironblogger sync-posts
 
 Will download the blog posts.
-
-The database is currently created within the iron_blogger2 module
-directory. This is considered a bug, and will be fixed soon.
 
 Iron Blogger 2 is Free Software, released under the GPL3. A list of
 its authors can be found in the file `AUTHORS`.
