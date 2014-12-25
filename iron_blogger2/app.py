@@ -146,10 +146,10 @@ def show_bloggers():
     return render_template('bloggers.html',
                            bloggers=db.session.query(Blogger).all())
 
-@app.route('/planet')
-def show_planet():
+@app.route('/all-posts')
+def show_all_posts():
     posts = db.session.query(Post).order_by(Post.date.desc())
-    return render_template('planet.html', posts=posts)
+    return render_template('all-posts.html', posts=posts)
 
 
 if __name__ == '__main__':
