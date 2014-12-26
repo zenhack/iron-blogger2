@@ -16,7 +16,7 @@
 from datetime import date
 import time
 
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask.ext.sqlalchemy import SQLAlchemy
 import feedparser
 
@@ -96,6 +96,7 @@ class Post(db.Model):
     blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'), nullable=False)
     date = db.Column(db.Date, nullable=False)
     title = db.Column(db.String(VCHAR_DEFAULT), nullable=False)
+    summary = db.Column(db.Text, nullable=False)
     page_url = db.Column(db.String(VCHAR_DEFAULT), nullable=False)
     blog = db.relationship('Blog', backref=db.backref('posts'))
 
@@ -127,14 +128,13 @@ class Post(db.Model):
         This leaves the `blog` field emtpy; this must be filled in before the
         post is added to the database.
         """
-        if 'title' not in entry:
-            raise MalformedPostError("Post has no title: %r" % entry)
-        if 'link' not in entry:
-            raise MalformedPostError("Post has no url: %r" % entry)
-        title = entry['title']
+        for field in 'title', 'summary', 'link':
+            if field not in entry:
+                raise MalformedPostError("Post has no %s: %r" % (field, entry))
         post = Post()
         post.date = Post._get_pub_date(entry)
-        post.title = title
+        post.title = entry['title']
+        post.summary = entry['summary']
         post.page_url = entry['link']
 
         return post
