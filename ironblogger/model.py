@@ -42,6 +42,16 @@ class Blogger(db.Model):
         if blogs is not None:
             self.blogs = blogs
 
+    def compute_debt(self, since=None, until=None):
+        if since is None:
+            since = self.start_date
+        if until is None:
+            until = date.today()
+        posts = db.session.query(Post) \
+                .filter_by(since < Post.date < until) \
+                .filter_by(Post.blog.blogger == self) \
+                .order_by(Post.date.desc()).all()
+
 
 class Blog(db.Model):
     """A blog. bloggers may have more than one of these."""
@@ -131,6 +141,17 @@ class Post(db.Model):
                 return date.fromtimestamp(time.mktime(feed_entry[key]))
         raise MalformedPostError("No valid publication date in post: %r" %
                                  feed_entry)
+
+    def due(self):
+        """Return the date for which this post counted."""
+
+        # There has got to be a better way to do this.
+        one_day = date(2015, 1, 2) - date(2015, 1, 1)
+        sunday = 6
+
+        weekday = self.date.weekday()
+        return self.date + (one_day * (sunday - weekday))
+
 
     @staticmethod
     def from_feed_entry(entry):
