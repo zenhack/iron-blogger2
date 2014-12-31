@@ -16,16 +16,18 @@
 from iron_blogger2.app import *
 import sys
 import yaml
+import logging
 
-def _app_context():
-    app.test_request_context().push()
 
 
 def sync_posts():
-    _app_context()
-    blogs = db.session.query(Blog).all()
-    for blog in blogs:
-        blog.sync_posts()
+    with app.test_request_context():
+        blogs = db.session.query(Blog).all()
+        for blog in blogs:
+            try:
+                blog.sync_posts()
+            except MalformedPostError as e:
+                logging.info('%s', e)
 
 
 def import_bloggers(file):
@@ -50,23 +52,19 @@ def import_bloggers(file):
     ``import_bloggers`` will create the database if it does not exist, and
     populat it with the contents of ``file``.
     """
-    _app_context()
-    db.create_all()
-    session = db.session
+    with app.test_request_context():
+        db.create_all()
+        session = db.session
 
-
-    # TODO: Right now the database gets created relative to the module
-    # directory, which is probably not what we want -- it would make more sense
-    # to put in in ${PWD}.
-    yml = yaml.load(file)
-    for blogger in yml.iteritems():
-        name = blogger[0]
-        start_date = blogger[1]['start']
-        model = Blogger(name, start_date)
-        for link in blogger[1]['links']:
-            model.blogs.append(Blog(*link))
-        session.add(model)
-    session.commit()
+        yml = yaml.load(file)
+        for blogger in yml.iteritems():
+            name = blogger[0]
+            start_date = blogger[1]['start']
+            model = Blogger(name, start_date)
+            for link in blogger[1]['links']:
+                model.blogs.append(Blog(*link))
+            session.add(model)
+        session.commit()
 
 
 def usage(exit_status=1):

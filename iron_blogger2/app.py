@@ -19,6 +19,7 @@ import time
 from flask import Flask, render_template, request
 from flask.ext.sqlalchemy import SQLAlchemy
 import feedparser
+import jinja2
 
 VCHAR_DEFAULT = 255  # Default length of string/varchar columns.
                      # This might not actually be enough for some urls.
@@ -123,9 +124,9 @@ class Post(db.Model):
         """
         for key in 'published', 'created', 'updated':
             key += '_parsed'
-            if key in feed_entry:
+            if key in feed_entry and feed_entry[key] is not None:
                 return date.fromtimestamp(time.mktime(feed_entry[key]))
-        raise MalformedPostError("No publication date in post: %r" %
+        raise MalformedPostError("No valid publication date in post: %r" %
                                  feed_entry)
 
     @staticmethod
@@ -146,6 +147,13 @@ class Post(db.Model):
         post.date = Post._get_pub_date(entry)
         post.title = entry['title']
         post.summary = entry['summary']
+        if entry.summary_detail.type == 'text/plain':
+            # feedparser doesn't sanitize the summary if it's plain text, so we
+            # need to do it manually. We're using jijna2's autoscape feature
+            # for this, which feels like a bit of a hack to me (Ian), but it
+            # works -- there's probably a cleaner way to do this.
+            tmpl = jinja2.Template('{{ text }}', autoescape=True)
+            post.summary = tmpl.render(text=post.summary)
         post.page_url = entry['link']
 
         return post
