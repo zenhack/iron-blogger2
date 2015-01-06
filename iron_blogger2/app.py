@@ -147,7 +147,35 @@ class Post(db.Model):
         post.date = Post._get_pub_date(entry)
         post.title = entry['title']
         post.summary = entry['summary']
-        if entry.summary_detail.type == 'text/plain':
+
+        # The summary detail attribute lets us find the mime type of the
+        # summary. feedparser doesn't escape it if it's text/plain, so we need
+        # to do it ourselves. Unfortunately, there's a bug (likely #412) in
+        # feedparser, and sometimes this attribute is unavailable. If it's
+        # there, great, use it. Otherwise, we'll just assume it's html, and
+        # sanitize it ourselves.
+        if hasattr(entry, 'summary_detail'):
+            mimetype = entry.summary_detail.type
+        else:
+            mimetype = 'application/xhtml'
+            # Sanitize the html; who knows what feedparser did or didn't do.
+            # XXX: _sanitizeHTML is a private function to the feedparser
+            # library! unfortunately, we don't have many better options. This
+            # statement is the reason the version number for the feedparser
+            # dependency is fixed at 5.1.3; any alternate version will need to
+            # be vetted carefully, as by doing this we lose any api stability
+            # guarantees.
+            post.summary = unicode(feedparser._sanitizeHTML(
+                # _sanitizeHTML expects an encoding, so rather than do more
+                # guesswork than we alredy have...
+                post.summary.encode('utf-8'),
+                'utf-8',
+                # _sanitizeHTML is only ever called within the library with
+                # this value:
+                u'text/html',
+            ), 'utf-8')
+
+        if mimetype == 'text/plain':
             # feedparser doesn't sanitize the summary if it's plain text, so we
             # need to do it manually. We're using jijna2's autoscape feature
             # for this, which feels like a bit of a hack to me (Ian), but it
