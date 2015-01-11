@@ -76,6 +76,7 @@ class Blog(db.Model):
         # The loop below assumes our feed entries are sorted by date, newest
         # first. This ensures just that:
         feed_posts = sorted([(post.date, post) for post in feed_posts])
+        feed_posts.reverse()
         feed_posts = [post for (_date, post) in feed_posts]
 
         for post in feed_posts:
