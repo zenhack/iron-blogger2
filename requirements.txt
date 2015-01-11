@@ -2,3 +2,8 @@ Flask
 Flask-SQLAlchemy
 feedparser==5.1.3
 PyYAML
+# Depending on your database, you may need one of the following.
+# uncomment as needed:
+#
+# for postgresql:
+#psycopg2
