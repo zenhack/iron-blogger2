@@ -88,9 +88,9 @@ class Blog(db.Model):
                     # or equal here, since someone might post more than one
                     # post in a day.
                     break
+                if post.date == last_post.date and post.title == last_post.title:
                     # If a post has the same date as one already in the db (on
                     # the same blog), we use the title as an identifier.
-                if post.date == last_post.date and post.title == last_post.title:
                     break
 
             post.blog = self
