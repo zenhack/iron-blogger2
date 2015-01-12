@@ -15,6 +15,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>
 from datetime import date
 import time
+import logging
 
 from flask import Flask, render_template, request
 from flask.ext.sqlalchemy import SQLAlchemy
@@ -67,6 +68,9 @@ class Blog(db.Model):
             self.blogger = blogger
 
     def sync_posts(self):
+        logging.info('Syncing posts for blog %r by %r',
+                     self.title,
+                     self.blogger.name)
         last_post = db.session.query(Post)\
             .filter_by(blog=self)\
             .order_by(Post.date.desc()).first()
@@ -95,6 +99,7 @@ class Blog(db.Model):
 
             post.blog = self
             db.session.add(post)
+            logging.info('Added new post %r', post.page_url)
         db.session.commit()
 
 

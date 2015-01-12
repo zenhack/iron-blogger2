@@ -21,6 +21,7 @@ import logging
 
 
 def sync_posts():
+    logging.info('Syncing posts')
     with app.test_request_context():
         blogs = db.session.query(Blog).all()
         for blog in blogs:
