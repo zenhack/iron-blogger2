@@ -4,8 +4,9 @@
 #
 # To use this, copy it to wsgi.py edit, APPNAME (below) if need be, uncomment
 # the dependency for postgresql in requirements.txt, commit, and push. you'll
-# have to arrange for the initial population of the database yourself, as well
-# as syncing posts. In the future, we'll have a more polished answer for this.
+# have to arrange for the initial population of the database yourself. If you
+# enable the cron cartridge, the `.openshift`, directory contains a job that
+# will sync the posts every hour.
 
 # This bit is copied from openshift's standard python boilerplate:
 import os
