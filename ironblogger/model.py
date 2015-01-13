@@ -23,6 +23,12 @@ import jinja2
 VCHAR_DEFAULT = 255  # Default length of string/varchar columns.
                      # This might not actually be enough for some urls.
 
+# I'm in slight disbelief that these constants aren't defined somewherre
+# obvious, but I can't find them in the libraries. (Ian)
+ONE_DAY= date(2015, 1, 2) - date(2015, 1, 1)
+SUNDAY = 6
+
+
 db = SQLAlchemy()
 
 
@@ -145,12 +151,8 @@ class Post(db.Model):
     def due(self):
         """Return the date for which this post counted."""
 
-        # There has got to be a better way to do this.
-        one_day = date(2015, 1, 2) - date(2015, 1, 1)
-        sunday = 6
-
         weekday = self.date.weekday()
-        return self.date + (one_day * (sunday - weekday))
+        return self.date + (ONE_DAY * (SUNDAY - weekday))
 
 
     @staticmethod
