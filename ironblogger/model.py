@@ -23,13 +23,25 @@ import jinja2
 VCHAR_DEFAULT = 255  # Default length of string/varchar columns.
                      # This might not actually be enough for some urls.
 
-# I'm in slight disbelief that these constants aren't defined somewherre
+# I'm in slight disbelief that these constants aren't defined somewhere
 # obvious, but I can't find them in the libraries. (Ian)
-ONE_DAY= date(2015, 1, 2) - date(2015, 1, 1)
+ONE_DAY = date(2015, 1, 2) - date(2015, 1, 1)
+ONE_WEEK = ONE_DAY * 7
 SUNDAY = 6
 
 
 db = SQLAlchemy()
+
+
+def duedate(post_date):
+    """The due date for which a post published on ``post_date`` counts.
+
+    preconditions:
+
+        isinstance(post_date, date)
+    """
+    weekday = date.weekday()
+    return date + (ONE_DAY * (SUNDAY - weekday))
 
 
 class MalformedPostError(Exception):
@@ -48,15 +60,34 @@ class Blogger(db.Model):
         if blogs is not None:
             self.blogs = blogs
 
-    def compute_debt(self, since=None, until=None):
+    def missed_posts(self, since=None, until=None):
+        """Return the number of posts the blogger has missed.
+
+        If since is not None, the result will count starting from since.
+        Otherwise, it will count starting from the blogger's start_date.
+
+        If until is not None, the result will be the number of missed posts up
+        to intil. Otherwise, it will be the number of missed posts up to the
+        present.
+        """
         if since is None:
             since = self.start_date
         if until is None:
             until = date.today()
+
+        first_duedate = duedate(since)
+        last_duedate = duedate(until) - ONE_WEEK
+
         posts = db.session.query(Post) \
-                .filter_by(since < Post.date < until) \
+                .filter_by(first_duedate - ONE_WEEK < Post.date < last_duedate) \
                 .filter_by(Post.blog.blogger == self) \
-                .order_by(Post.date.desc()).all()
+                .order_by(Post.date.asc()).all()
+
+        met = set()
+        for post in posts:
+            met.add(duedate(post.date))
+        num_duedates = (last_duedate - first_duedate + ONE_WEEK).days / 7
+        return num_duedates - len(met)
 
 
 class Blog(db.Model):
@@ -147,12 +178,6 @@ class Post(db.Model):
                 return date.fromtimestamp(time.mktime(feed_entry[key]))
         raise MalformedPostError("No valid publication date in post: %r" %
                                  feed_entry)
-
-    def due(self):
-        """Return the date for which this post counted."""
-
-        weekday = self.date.weekday()
-        return self.date + (ONE_DAY * (SUNDAY - weekday))
 
 
     @staticmethod
