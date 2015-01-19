@@ -1,7 +1,8 @@
 from datetime import date
 from iron_blogger2.config import setup as app_setup
 from iron_blogger2 import cli
-from iron_blogger2.app import *
+from iron_blogger2.app import app
+from iron_blogger2.model import *
 import os.path
 import pytest
 import tempfile

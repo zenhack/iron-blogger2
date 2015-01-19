@@ -13,11 +13,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>
 
-from iron_blogger2.app import *
+from iron_blogger2.app import app
+from iron_blogger2.model import Blogger, Blog, MalformedPostError, db
 import sys
 import yaml
 import logging
-
 
 
 def sync_posts():
@@ -81,11 +81,13 @@ def usage(exit_status=1):
     print(usage)
     sys.exit(exit_status)
 
+
 def show_help(*args):
     if len(args) == 0:
         usage(0)
     else:
         print("command help not yet implemented")
+
 
 def main():
     if len(sys.argv) < 2:
