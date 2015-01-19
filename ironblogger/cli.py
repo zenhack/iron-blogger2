@@ -13,8 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>
 
-from iron_blogger2.app import app
-from iron_blogger2.model import Blogger, Blog, MalformedPostError, db
+from ironblogger.app import app
+from ironblogger.model import Blogger, Blog, MalformedPostError, db
 import sys
 import yaml
 import logging

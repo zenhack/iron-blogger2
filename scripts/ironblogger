@@ -17,5 +17,5 @@
 # This loads the app config:
 import wsgi
 
-from iron_blogger2.cli import main
+from ironblogger.cli import main
 main()

@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>
 from flask import Flask, render_template
-from iron_blogger2.model import db, Blogger, Post
+from ironblogger.model import db, Blogger, Post
 
 app = Flask(__name__)
 

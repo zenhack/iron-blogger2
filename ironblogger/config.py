@@ -12,7 +12,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
-from iron_blogger2.app import app, db
+from ironblogger.app import app
+from ironblogger.model import db
 
 
 def setup(cfg=None):

@@ -22,8 +22,8 @@ except IOError:
 
 APPNAME = 'ironblogger' # The name of our app on openshift.
 
-from iron_blogger2.config import setup
-from iron_blogger2.app import app as application
+from ironblogger.config import setup
+from ironblogger.app import app as application
 
 setup({
     'db_uri': os.getenv('OPENSHIFT_POSTGRESQL_DB_URL') + '/' + APPNAME,
