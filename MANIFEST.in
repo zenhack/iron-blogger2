@@ -1,5 +1,7 @@
 include AUTHORS
 include COPYING
 include example.wsgi.py
+include example-openshift.wsgi.py
 include README.md
 include requirements.txt
+include test-requirements.txt
