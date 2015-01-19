@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+{% block content %}
+<table>
+	<tr>
+		<th>Blogger</th>
+		<th>Debt</th>
+	</tr>
+	{% for blogger in bloggers %}
+	<tr>
+		<td>{{ blogger.m.name }}</td>
+		<td>{{ blogger.debt }}</td>
+	</tr>
+	{% endfor %}
+</table>
+{% endblock %}

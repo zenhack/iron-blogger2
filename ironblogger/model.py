@@ -40,8 +40,8 @@ def duedate(post_date):
 
         isinstance(post_date, date)
     """
-    weekday = date.weekday()
-    return date + (ONE_DAY * (SUNDAY - weekday))
+    weekday = post_date.weekday()
+    return post_date + (ONE_DAY * (SUNDAY - weekday))
 
 
 class MalformedPostError(Exception):
@@ -78,10 +78,13 @@ class Blogger(db.Model):
         first_duedate = duedate(since)
         last_duedate = duedate(until) - ONE_WEEK
 
-        posts = db.session.query(Post) \
-                .filter_by(first_duedate - ONE_WEEK < Post.date < last_duedate) \
-                .filter_by(Post.blog.blogger == self) \
-                .order_by(Post.date.asc()).all()
+        posts, _, _ = db.session.query(Post, Blog, Blogger).filter(
+            (first_duedate - ONE_WEEK) < Post.date,
+            Post.date < last_duedate,
+            Post.blog_id == Blog.id,
+            Blog.blogger_id == Blogger.id,
+            Blogger.id == self.id,
+        ).all()
 
         met = set()
         for post in posts:
