@@ -20,7 +20,7 @@ from os import path
 req_file = path.join(path.dirname(__file__), 'requirements.txt')
 reqs = [str(r.req) for r in parse_requirements(req_file)]
 
-setup(name='iron-blogger2',
+setup(name='ironblogger',
       version='0.1',
       url='https://github.com/zenhack/iron-blogger2',
       packages=find_packages(),
