@@ -11,6 +11,8 @@ from StringIO import StringIO
 
 from jinja2 import Template
 
+from tests.util import fresh_context
+
 
 rss_feed_template = '''
 <?xml version="1.0" encoding="utf-8"?>
@@ -111,14 +113,7 @@ def post_summary_etree(post):
     return etree.parse(summary, parser)
 
 
-@pytest.yield_fixture(autouse=True)
-def init_fixture():
-    app_setup({
-        "db_uri": "sqlite:///:memory:",
-    })
-    with app.test_request_context():
-        db.create_all()
-        yield
+fresh_context = pytest.yield_fixture(autouse=True)(fresh_context)
 
 
 @pytest.mark.parametrize('post', malformed_posts)

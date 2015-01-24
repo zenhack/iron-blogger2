@@ -78,7 +78,7 @@ class Blogger(db.Model):
         first_duedate = duedate(since)
         last_duedate = duedate(until) - ONE_WEEK
 
-        posts, _, _ = db.session.query(Post, Blog, Blogger).filter(
+        posts = db.session.query(Post).filter(
             (first_duedate - ONE_WEEK) < Post.date,
             Post.date < last_duedate,
             Post.blog_id == Blog.id,
