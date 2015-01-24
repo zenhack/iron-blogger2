@@ -23,6 +23,13 @@ def show_index():
     return render_template('index.html')
 
 
+@app.route('/status')
+def show_status():
+    blogger_debts = [(blogger, '$%d' % (5 * blogger.missed_posts()))
+                     for blogger in db.session.query(Blogger).all()]
+    return render_template('status.html', blogger_debts=blogger_debts)
+
+
 @app.route('/bloggers')
 def show_bloggers():
     return render_template('bloggers.html',
