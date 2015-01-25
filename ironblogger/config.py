@@ -15,7 +15,9 @@
 from ironblogger.app import app
 from ironblogger.model import db
 
+global cfg
 
-def setup(cfg=None):
+def setup(newcfg):
+    cfg = newcfg
     app.config['SQLALCHEMY_DATABASE_URI'] = cfg['db_uri']
     db.init_app(app)
