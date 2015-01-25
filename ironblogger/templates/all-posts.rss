@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0">
+	<channel>
+		<title>Iron Blogger {{ cfg['region'] }}</title>
+		<link>{{ url_for('show_all_posts') }}</link>
+		<description>Iron Blogger {{ cfg['region'] }} Aggregated Feed</descrption>
+		<language>{{ cfg['language'] }}</language>
+
+		{% for post in posts %}
+		<item>
+			<title>{{ post.title }}</title>
+			<!-- TODO: make sure we're formatting the date correctly. -->
+			<pubDate>{{ post.date }}</pubDate>
+			<link>{{ post.page_url }}</link>
+			<description>{{ post.summary | safe }}</description>
+		{% endfor %}
+	</channel>
+</rss>

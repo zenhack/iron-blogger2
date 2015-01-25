@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% block content %}
+<a href="{{ url_for('show_all_posts_rss') }}">rss</a>
 {% for post in posts %}
 <section>
 	<h1>{{ post.date }}: <a href="{{ post.page_url }}">{{ post.title }}</a> by {{ post.blog.blogger.name}} via <a href="{{ post.blog.page_url }}">{{ post.blog.title }}</a></h1>
