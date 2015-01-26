@@ -1,5 +1,5 @@
 from ironblogger.app import app
-from ironblogger.config import setup
+from ironblogger.wsgi import setup
 from ironblogger.model import db
 
 

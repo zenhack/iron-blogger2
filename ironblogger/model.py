@@ -20,29 +20,12 @@ from flask.ext.sqlalchemy import SQLAlchemy
 import feedparser
 import jinja2
 
+from ironblogger.date import ONE_WEEK, duedate
+
 VCHAR_DEFAULT = 255  # Default length of string/varchar columns.
                      # This might not actually be enough for some urls.
 
-# I'm in slight disbelief that these constants aren't defined somewhere
-# obvious, but I can't find them in the libraries. (Ian)
-ONE_DAY = date(2015, 1, 2) - date(2015, 1, 1)
-ONE_WEEK = ONE_DAY * 7
-SUNDAY = 6
-
-
 db = SQLAlchemy()
-
-
-def duedate(post_date):
-    """The due date for which a post published on ``post_date`` counts.
-
-    preconditions:
-
-        isinstance(post_date, date)
-    """
-    weekday = post_date.weekday()
-    return post_date + (ONE_DAY * (SUNDAY - weekday))
-
 
 class MalformedPostError(Exception):
     """Raised when parsing a post fails."""
