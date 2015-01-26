@@ -12,31 +12,5 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>
-from flask import Flask, render_template
-from ironblogger.model import db, Blogger, Post
-
-app = Flask(__name__)
-
-
-@app.route('/')
-def show_index():
-    return render_template('index.html')
-
-
-@app.route('/status')
-def show_status():
-    blogger_debts = [(blogger, '$%d' % (5 * blogger.missed_posts()))
-                     for blogger in db.session.query(Blogger).all()]
-    return render_template('status.html', blogger_debts=blogger_debts)
-
-
-@app.route('/bloggers')
-def show_bloggers():
-    return render_template('bloggers.html',
-                           bloggers=db.session.query(Blogger).all())
-
-
-@app.route('/all-posts')
-def show_all_posts():
-    posts = db.session.query(Post).order_by(Post.date.desc())
-    return render_template('all-posts.html', posts=posts)
+import flask
+app = flask.Flask(__name__)

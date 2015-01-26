@@ -19,12 +19,11 @@ except IOError:
     pass
 
 # Okay, the rest of this is all us, and just standard wsgi.
+from ironblogger.wsgi import *
 
-APPNAME = 'ironblogger' # The name of our app on openshift.
 
-from ironblogger.config import setup
-from ironblogger.app import app as application
-
+APPNAME = 'ironblogger'  # The name of our app on openshift.
 setup({
+    'region': 'Boston',
     'db_uri': os.getenv('OPENSHIFT_POSTGRESQL_DB_URL') + '/' + APPNAME,
 })

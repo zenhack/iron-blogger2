@@ -4,7 +4,7 @@
 *.egg-info
 build
 dist
-wsgi.py
+/wsgi.py
 bloggers.yml
 __pycache__
 *.swp
