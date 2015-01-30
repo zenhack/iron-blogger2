@@ -14,17 +14,20 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>
 
 from setuptools import setup, find_packages
-from pip.req import parse_requirements
-from os import path
-import uuid
-
-req_file = path.join(path.dirname(__file__), 'requirements.txt')
-reqs = [str(r.req) for r in parse_requirements(req_file, session=uuid.uuid1())]
 
 setup(name='ironblogger',
       version='0.1',
       url='https://github.com/zenhack/iron-blogger2',
       packages=find_packages(),
       scripts=['scripts/ironblogger'],
-      install_requires=reqs,
-      )
+      install_requires=[
+          'Flask',
+          'Flask-SQLAlchemy',
+          'feedparser==5.1.3',
+          'PyYAML',
+          # Depending on your database, you may need one of the following.
+          # uncomment as needed:
+          #
+          # for postgresql:
+          # 'psycopg2',
+      ])
