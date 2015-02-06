@@ -13,6 +13,7 @@
 			<pubDate>{{ post.rssdate() }}</pubDate>
 			<link>{{ post.page_url }}</link>
 			<description>{{ post.summary | safe }}</description>
+		</item>
 		{% endfor %}
 	</channel>
 </rss>
