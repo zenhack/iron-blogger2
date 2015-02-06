@@ -1,4 +1,4 @@
-# Copyright 2014 Ian Denhardt <ian@zenhack.net>
+# Copyright 2014-2015 Ian Denhardt <ian@zenhack.net>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -12,14 +12,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
-from ironblogger.app import app
-from ironblogger.model import db
-
 cfg = None
 
 
 def setup(newcfg):
     global cfg
     cfg = newcfg
-    app.config['SQLALCHEMY_DATABASE_URI'] = cfg['db_uri']
-    db.init_app(app)

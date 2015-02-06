@@ -25,5 +25,6 @@ from ironblogger.wsgi import *
 APPNAME = 'ironblogger'  # The name of our app on openshift.
 setup({
     'region': 'Boston',
+    'language': 'en-us',
     'db_uri': os.getenv('OPENSHIFT_POSTGRESQL_DB_URL') + '/' + APPNAME,
 })
