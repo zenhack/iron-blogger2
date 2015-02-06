@@ -3,14 +3,14 @@
 	<channel>
 		<title>Iron Blogger {{ cfg['region'] }}</title>
 		<link>{{ url_for('show_all_posts') }}</link>
-		<description>Iron Blogger {{ cfg['region'] }} Aggregated Feed</descrption>
+		<description>Iron Blogger {{ cfg['region'] }} Aggregated Feed</description>
 		<language>{{ cfg['language'] }}</language>
 
 		{% for post in posts %}
 		<item>
 			<title>{{ post.title }}</title>
 			<!-- TODO: make sure we're formatting the date correctly. -->
-			<pubDate>{{ rssdate(post.timestamp) }}</pubDate>
+			<pubDate>{{ post.rssdate() }}</pubDate>
 			<link>{{ post.page_url }}</link>
 			<description>{{ post.summary | safe }}</description>
 		{% endfor %}

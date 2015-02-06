@@ -33,4 +33,8 @@ def rssdate(date_obj, cfg=None):
     """
     if cfg is None:
         cfg = config.cfg
-    return date_obj.strftime('%d %b %Y %T %z')
+    timestamp = date_obj.strftime('%d %b %Y %T ')
+    timezone = date_obj.strftime('%z')
+    if timezone == '':
+        timezone = cfg['timezone']
+    return timestamp + timezone

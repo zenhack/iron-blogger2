@@ -20,6 +20,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 import feedparser
 import jinja2
 
+import ironblogger.date
 from ironblogger.date import ONE_WEEK, duedate
 
 VCHAR_DEFAULT = 255  # Default length of string/varchar columns.
@@ -222,3 +223,6 @@ class Post(db.Model):
         post.page_url = entry['link']
 
         return post
+
+    def rssdate(self):
+        return ironblogger.date.rssdate(self.timestamp)
