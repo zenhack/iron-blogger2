@@ -16,6 +16,7 @@ import flask
 from ironblogger.model import db, Blogger, Post
 from ironblogger.app import app
 from ironblogger import config
+from ironblogger.date import rssdate
 
 
 def render_template(*args, **kwargs):
@@ -43,11 +44,11 @@ def show_bloggers():
 
 @app.route('/all-posts/rss')
 def show_all_posts_rss():
-    posts = db.session.query(Post).order_by(Post.date.desc())
+    posts = db.session.query(Post).order_by(Post.timestamp.desc())
     return render_template('all-posts.rss', posts=posts)
 
 
 @app.route('/all-posts')
 def show_all_posts():
-    posts = db.session.query(Post).order_by(Post.date.desc())
-    return render_template('all-posts.html', posts=posts)
+    posts = db.session.query(Post).order_by(Post.timestamp.desc())
+    return render_template('all-posts.html', posts=posts, rssdate=rssdate)

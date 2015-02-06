@@ -10,7 +10,7 @@
 		<item>
 			<title>{{ post.title }}</title>
 			<!-- TODO: make sure we're formatting the date correctly. -->
-			<pubDate>{{ post.date }}</pubDate>
+			<pubDate>{{ rssdate(post.timestamp) }}</pubDate>
 			<link>{{ post.page_url }}</link>
 			<description>{{ post.summary | safe }}</description>
 		{% endfor %}

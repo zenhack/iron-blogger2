@@ -12,7 +12,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>
-from datetime import date
+from datetime import datetime
 import time
 import logging
 
@@ -35,7 +35,7 @@ class Blogger(db.Model):
     """An Iron Blogger participant."""
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(VCHAR_DEFAULT), nullable=False, unique=True)
-    start_date = db.Column(db.Date, nullable=False)
+    start_date = db.Column(db.DateTime, nullable=False)
 
     def __init__(self, name, start_date, blogs=None):
         self.name = name
@@ -50,20 +50,20 @@ class Blogger(db.Model):
         Otherwise, it will count starting from the blogger's start_date.
 
         If until is not None, the result will be the number of missed posts up
-        to intil. Otherwise, it will be the number of missed posts up to the
+        to until. Otherwise, it will be the number of missed posts up to the
         present.
         """
         if since is None:
             since = self.start_date
         if until is None:
-            until = date.today()
+            until = datetime.now()
 
         first_duedate = duedate(since)
         last_duedate = duedate(until) - ONE_WEEK
 
         posts = db.session.query(Post).filter(
-            (first_duedate - ONE_WEEK) < Post.date,
-            Post.date < last_duedate,
+            (first_duedate - ONE_WEEK) < Post.timestamp,
+            Post.timestamp < last_duedate,
             Post.blog_id == Blog.id,
             Blog.blogger_id == Blogger.id,
             Blogger.id == self.id,
@@ -71,7 +71,7 @@ class Blogger(db.Model):
 
         met = set()
         for post in posts:
-            met.add(duedate(post.date))
+            met.add(duedate(post.timestamp))
         num_duedates = (last_duedate - first_duedate + ONE_WEEK).days / 7
         return num_duedates - len(met)
 
@@ -103,13 +103,13 @@ class Blog(db.Model):
                      self.blogger.name)
         last_post = db.session.query(Post)\
             .filter_by(blog=self)\
-            .order_by(Post.date.desc()).first()
+            .order_by(Post.timestamp.desc()).first()
         feed = feedparser.parse(self.feed_url)
         feed_posts = map(Post.from_feed_entry, feed.entries)
 
         # The loop below assumes our feed entries are sorted by date, newest
         # first. This ensures just that:
-        feed_posts = sorted([(post.date, post) for post in feed_posts])
+        feed_posts = sorted([(post.timestamp, post) for post in feed_posts])
         feed_posts.reverse()
         feed_posts = [post for (_date, post) in feed_posts]
 
@@ -137,7 +137,7 @@ class Post(db.Model):
     """A blog post."""
     id = db.Column(db.Integer, primary_key=True)
     blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'), nullable=False)
-    date = db.Column(db.Date, nullable=False)
+    timestamp = db.Column(db.DateTime, nullable=False)
     title = db.Column(db.String(VCHAR_DEFAULT), nullable=False)
 
     # The *sanitized* description/summary field from the feed entry. This will
@@ -150,7 +150,7 @@ class Post(db.Model):
 
     @staticmethod
     def _get_pub_date(feed_entry):
-        """Return a datetime.date object for the post's publication date.
+        """Return a datetime.datetime object for the post's publication date.
 
         ``feed_entry`` should be a post object as returned by
         ``feedparser.parse``.
@@ -161,7 +161,7 @@ class Post(db.Model):
         for key in 'published', 'created', 'updated':
             key += '_parsed'
             if key in feed_entry and feed_entry[key] is not None:
-                return date.fromtimestamp(time.mktime(feed_entry[key]))
+                return datetime.fromtimestamp(time.mktime(feed_entry[key]))
         raise MalformedPostError("No valid publication date in post: %r" %
                                  feed_entry)
 
@@ -181,7 +181,7 @@ class Post(db.Model):
             if field not in entry:
                 raise MalformedPostError("Post has no %s: %r" % (field, entry))
         post = Post()
-        post.date = Post._get_pub_date(entry)
+        post.timestamp = Post._get_pub_date(entry)
         post.title = entry['title']
         post.summary = entry['summary']
 
