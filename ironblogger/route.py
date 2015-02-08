@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>
 import flask
+from flask import make_response
 from ironblogger.model import db, Blogger, Post
 from ironblogger.app import app
 from ironblogger import config
@@ -45,7 +46,9 @@ def show_bloggers():
 @app.route('/all-posts/rss')
 def show_all_posts_rss():
     posts = db.session.query(Post).order_by(Post.timestamp.desc())
-    return render_template('all-posts.rss', posts=posts)
+    resp = make_response(render_template('all-posts.rss', posts=posts), 200)
+    resp.headers['Content-Type'] = 'application/rss+xml'
+    return resp
 
 
 @app.route('/all-posts')
