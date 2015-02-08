@@ -12,6 +12,7 @@
 			<!-- TODO: make sure we're formatting the date correctly. -->
 			<pubDate>{{ post.rssdate() }}</pubDate>
 			<link>{{ post.page_url }}</link>
+			<guid>{{ post.page_url }}</guid>
 			<description>{{ post.summary | safe }}</description>
 		</item>
 		{% endfor %}
