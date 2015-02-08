@@ -5,11 +5,9 @@
 		<link>{{ url_for('show_all_posts', _external=True) }}</link>
 		<description>Iron Blogger {{ cfg['region'] }} Aggregated Feed</description>
 		<language>{{ cfg['language'] }}</language>
-
 		{% for post in posts %}
 		<item>
 			<title>{{ post.title }}</title>
-			<!-- TODO: make sure we're formatting the date correctly. -->
 			<pubDate>{{ post.rssdate() }}</pubDate>
 			<link>{{ post.page_url }}</link>
 			<guid>{{ post.page_url }}</guid>
