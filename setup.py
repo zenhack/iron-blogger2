@@ -25,6 +25,7 @@ setup(name='ironblogger',
           'Flask-SQLAlchemy',
           'feedparser==5.1.3',
           'PyYAML',
+          'schema',
           # Depending on your database, you may need one of the following.
           # uncomment as needed:
           #

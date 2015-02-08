@@ -14,7 +14,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 cfg = None
 
+from schema import Schema
+
+cfg_schema = Schema({
+    'region': basestring,
+    'language': basestring,
+    'timezone': basestring,
+    'db_uri': basestring,
+})
 
 def setup(newcfg):
+    cfg_schema.validate(newcfg)
     global cfg
     cfg = newcfg
