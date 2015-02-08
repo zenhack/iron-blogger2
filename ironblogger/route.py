@@ -46,7 +46,7 @@ def show_bloggers():
 @app.route('/all-posts/rss')
 def show_all_posts_rss():
     posts = db.session.query(Post).order_by(Post.timestamp.desc())
-    resp = make_response(render_template('all-posts.rss', posts=posts), 200)
+    resp = make_response(render_template('all-posts-rss.xml', posts=posts), 200)
     resp.headers['Content-Type'] = 'application/rss+xml'
     return resp
 
