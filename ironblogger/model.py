@@ -26,6 +26,11 @@ from ironblogger.date import ONE_WEEK, duedate
 VCHAR_DEFAULT = 255  # Default length of string/varchar columns.
                      # This might not actually be enough for some urls.
 
+feedparser.USER_AGENT = \
+        'IronBlogger/git ' + \
+        '+https://github.com/zenhack/iron-blogger2 ' + \
+        feedparser.USER_AGENT
+
 db = SQLAlchemy()
 
 class MalformedPostError(Exception):
