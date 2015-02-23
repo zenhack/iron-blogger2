@@ -23,9 +23,6 @@ import jinja2
 import ironblogger.date
 from ironblogger.date import ONE_WEEK, duedate
 
-VCHAR_DEFAULT = 255  # Default length of string/varchar columns.
-                     # This might not actually be enough for some urls.
-
 db = SQLAlchemy()
 
 class MalformedPostError(Exception):
@@ -35,7 +32,7 @@ class MalformedPostError(Exception):
 class Blogger(db.Model):
     """An Iron Blogger participant."""
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(VCHAR_DEFAULT), nullable=False, unique=True)
+    name = db.Column(db.String, nullable=False, unique=True)
     start_date = db.Column(db.DateTime, nullable=False)
 
     def __init__(self, name, start_date, blogs=None):
@@ -83,13 +80,13 @@ class Blog(db.Model):
     blogger_id = db.Column(db.Integer, db.ForeignKey('blogger.id'),
                            nullable=False)
     blogger = db.relationship('Blogger', backref=db.backref('blogs'))
-    title = db.Column(db.String(VCHAR_DEFAULT), nullable=False)
+    title = db.Column(db.String, nullable=False)
 
     # Human readable webpage:
-    page_url = db.Column(db.String(VCHAR_DEFAULT), nullable=False)
+    page_url = db.Column(db.String, nullable=False)
 
     # Atom/RSS feed:
-    feed_url = db.Column(db.String(VCHAR_DEFAULT), nullable=False)
+    feed_url = db.Column(db.String, nullable=False)
 
     def __init__(self, title, page_url, feed_url, blogger=None):
         self.title = title
@@ -139,14 +136,14 @@ class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'), nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False)
-    title = db.Column(db.String(VCHAR_DEFAULT), nullable=False)
+    title = db.Column(db.String, nullable=False)
 
     # The *sanitized* description/summary field from the feed entry. This will
     # be copied directly to the generated html, so sanitization is critical.
     summary = db.Column(db.Text, nullable=False)
 
     # URL for the HTML version of the post.
-    page_url = db.Column(db.String(VCHAR_DEFAULT), nullable=False)
+    page_url = db.Column(db.String, nullable=False)
     blog = db.relationship('Blog', backref=db.backref('posts'))
 
     @staticmethod
