@@ -13,9 +13,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>
 import flask
-from flask import make_response
+from flask import make_response, request, url_for
+from flask.ext.login import login_user, logout_user, login_required
+
 from ironblogger.model import db, Blogger, Post
-from ironblogger.app import app
+from ironblogger.app import app, load_user
 from ironblogger import config
 from ironblogger.date import rssdate
 
@@ -55,3 +57,24 @@ def show_all_posts_rss():
 def show_all_posts():
     posts = db.session.query(Post).order_by(Post.timestamp.desc())
     return render_template('all-posts.html', posts=posts, rssdate=rssdate)
+
+
+@app.route('/login', methods=['POST'])
+def do_login():
+    user = load_user(request.form['username'])
+    if user is not None and user.verify_password(request.form['password']):
+        login_user(user)
+        return flask.redirect(request.args.get('next') or url_for('show_index'))
+    return render_template('login.html', msg='Bad username or password')
+
+
+@app.route('/login', methods=['GET'])
+def show_login():
+    return render_template('login.html')
+
+
+@app.route('/logout', methods=['POST'])
+@login_required
+def do_logout():
+    logout_user()
+    return flask.redirect(url_for('show_login'))

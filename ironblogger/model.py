@@ -17,6 +17,8 @@ import time
 import logging
 
 from flask.ext.sqlalchemy import SQLAlchemy
+from flask.ext.login import UserMixin
+from passlib.hash import sha512_crypt
 import feedparser
 import jinja2
 
@@ -29,11 +31,45 @@ feedparser.USER_AGENT = \
         '+https://github.com/zenhack/iron-blogger2 ' + \
         feedparser.USER_AGENT
 
-
 db = SQLAlchemy()
+
 
 class MalformedPostError(Exception):
     """Raised when parsing a post fails."""
+
+
+class User(db.Model, UserMixin):
+    """A user of Iron Blogger.
+
+    In practice, this will almost always correspond to a blogger, but
+    theoretically an admin might not themselves be a participant, so the
+    concepts are kept separate.
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, nullable=False, unique=True)
+    is_admin = db.Column(db.Boolean, nullable=False)
+
+    # Hahsed & salted password. null means the account hasn't been activated.
+    hashed_password = db.Column(db.String)
+
+    blogger_id = db.Column(db.Integer, db.ForeignKey('blogger.id'), unique=True)
+    blogger = db.relationship('Blogger', backref=db.backref('user', uselist=False))
+
+    def verify_password(self, password):
+        if self.hashed_password is None:
+            return False
+        else:
+            return sha512_crypt.verify(password, self.hashed_password)
+
+    def set_password(self, password):
+        self.hashed_password = sha512_crypt.encrypt(password)
+
+    def get_id(self):
+        """Slightly non-intuitively returns self.name.
+
+        This is here for the benefit of Flask-Login.
+        """
+        return self.name
 
 
 class Blogger(db.Model):
@@ -193,7 +229,6 @@ class Post(db.Model):
                 return datetime.fromtimestamp(time.mktime(feed_entry[key]))
         raise MalformedPostError("No valid publication date in post: %r" %
                                  feed_entry)
-
 
     @staticmethod
     def from_feed_entry(entry):

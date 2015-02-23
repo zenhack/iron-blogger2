@@ -6,6 +6,11 @@
 	</head>
 	<body>
 		<h1><a href="{{ url_for('show_index') }}">Iron Blogger {{ cfg['region'] }}</a></h1>
+		{% if current_user.is_authenticated() %}
+		<a href="{{ url_for('do_logout') }}">Log out</a>
+		{% else %}
+		<a href="{{ url_for('show_login') }}">Log in</a>
+		{% endif %}
 		<div id="content">
 			{% block content %}{% endblock %}
 		</div>
