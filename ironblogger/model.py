@@ -23,6 +23,13 @@ import jinja2
 import ironblogger.date
 from ironblogger.date import ONE_WEEK, duedate
 
+
+feedparser.USER_AGENT = \
+        'IronBlogger/git ' + \
+        '+https://github.com/zenhack/iron-blogger2 ' + \
+        feedparser.USER_AGENT
+
+
 db = SQLAlchemy()
 
 class MalformedPostError(Exception):
@@ -114,13 +121,13 @@ class Blog(db.Model):
         for post in feed_posts:
             # Check if the post is already in the db:
             if last_post is not None:
-                if post.date < last_post.date:
+                if post.timestamp < last_post.timestamp:
                     # We can stop storing posts when we get to one that's older
                     # than one we already have. Note that we can't do less than
                     # or equal here, since someone might post more than one
                     # post in a day.
                     break
-                if post.date == last_post.date and post.title == last_post.title:
+                if post.timestamp == last_post.timestamp and post.title == last_post.title:
                     # If a post has the same date as one already in the db (on
                     # the same blog), we use the title as an identifier.
                     break
