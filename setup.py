@@ -26,6 +26,7 @@ setup(name='ironblogger',
           'feedparser==5.1.3',
           'PyYAML',
           'schema',
+          'alembic',
           # Depending on your database, you may need one of the following.
           # uncomment as needed:
           #
