@@ -95,6 +95,15 @@ class Blog(db.Model):
     # Atom/RSS feed:
     feed_url = db.Column(db.String, nullable=False)
 
+    # Metadata needed for caching, see:
+    #
+    #     https://pythonhosted.org/feedparser/http-etag.html:
+    #
+    etag = db.Column(db.String)
+    # We don't bother parsing the modification date, and instead treat it as an
+    # opaque string meaningful only to the server:
+    modified = db.Column(db.String)
+
     def __init__(self, title, page_url, feed_url, blogger=None):
         self.title = title
         self.page_url = page_url
@@ -109,7 +118,14 @@ class Blog(db.Model):
         last_post = db.session.query(Post)\
             .filter_by(blog=self)\
             .order_by(Post.timestamp.desc()).first()
-        feed = feedparser.parse(self.feed_url)
+        feed = feedparser.parse(self.feed_url,
+                                etag=self.etag,
+                                modified=self.modified)
+        if hasattr(feed, 'status') and feed.status == 304:
+            logging.info('Feed for blog %r (by %r) was not modified.',
+                         self.title,
+                         self.blogger.name)
+
         feed_posts = map(Post.from_feed_entry, feed.entries)
 
         # The loop below assumes our feed entries are sorted by date, newest
@@ -135,7 +151,15 @@ class Blog(db.Model):
             post.blog = self
             db.session.add(post)
             logging.info('Added new post %r', post.page_url)
+        self._update_caching_info(feed)
         db.session.commit()
+
+
+    def _update_caching_info(self, feed):
+        if hasattr(feed, 'etag'):
+            self.etag = feed.etag
+        if hasattr(feed, 'modified'):
+            self.modified = feed.modified
 
 
 class Post(db.Model):
