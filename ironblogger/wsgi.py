@@ -7,4 +7,5 @@ from ironblogger import route as _route
 def setup(cfg):
     config.setup(cfg)
     application.config['SQLALCHEMY_DATABASE_URI'] = config.cfg['db_uri']
+    application.secret_key = config.cfg['app_secret_key']
     _db.init_app(application)

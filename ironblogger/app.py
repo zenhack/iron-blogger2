@@ -15,9 +15,11 @@
 import flask
 from flask.ext.login import LoginManager
 from ironblogger.model import db, User
-app = flask.Flask(__name__)
 
+
+app = flask.Flask(__name__)
 login_manager = LoginManager()
+login_manager.init_app(app)
 
 
 @login_manager.user_loader

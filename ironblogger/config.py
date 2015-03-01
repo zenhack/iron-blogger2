@@ -21,6 +21,7 @@ cfg_schema = Schema({
     'language': basestring,
     'timezone': basestring,
     'db_uri': basestring,
+    'app_secret_key': basestring,
 })
 
 def setup(newcfg):
