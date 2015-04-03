@@ -4,14 +4,11 @@ Most of the Iron Blogger specific logic is book keeping about dates;
 unsurprisingly there are a few generic helpers we need that aren't in the
 standard library.
 """
-from datetime import date
+from datetime import date, timedelta
 from ironblogger import config
 
-# I'm in slight disbelief that these constants aren't defined somewhere
-# obvious, but I can't find them in the libraries. (Ian)
-ONE_DAY = date(2015, 1, 2) - date(2015, 1, 1)
-ONE_WEEK = ONE_DAY * 7
-SUNDAY = 6
+# This constant *has* to be defined somewhere, but I can't find it.
+SUNDAY = date(2015, 3, 29).weekday()
 
 
 def duedate(post_date):
@@ -22,7 +19,7 @@ def duedate(post_date):
         isinstance(post_date, date)
     """
     weekday = post_date.weekday()
-    return post_date + (ONE_DAY * (SUNDAY - weekday))
+    return post_date + (timedelta(days=1) * (SUNDAY - weekday))
 
 
 def rssdate(date_obj, cfg=None):

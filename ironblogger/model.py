@@ -12,7 +12,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 import logging
 
@@ -21,7 +21,7 @@ import feedparser
 import jinja2
 
 import ironblogger.date
-from ironblogger.date import ONE_WEEK, duedate
+from ironblogger.date import duedate
 
 DEBT_PER_POST = 5
 LATE_PENALTY = 1
@@ -66,10 +66,10 @@ class Blogger(db.Model):
             until = datetime.now()
 
         first_duedate = duedate(since)
-        last_duedate = duedate(until) - ONE_WEEK
+        last_duedate = duedate(until) - timedelta(weeks=1)
 
         posts = db.session.query(Post).filter(
-            (first_duedate - ONE_WEEK) < Post.timestamp,
+            (first_duedate - timedelta(weeks=1)) < Post.timestamp,
             Post.timestamp < last_duedate,
             Post.blog_id == Blog.id,
             Blog.blogger_id == Blogger.id,
@@ -79,7 +79,7 @@ class Blogger(db.Model):
         met = set()
         for post in posts:
             met.add(duedate(post.timestamp))
-        num_duedates = (last_duedate - first_duedate + ONE_WEEK).days / 7
+        num_duedates = (last_duedate - first_duedate + timedelta(weeks=1)).days / 7
         return num_duedates - len(met)
 
 
@@ -106,7 +106,7 @@ class BloggerRound(db.Model):
         if not self.post:
             return DEBT_PER_POST
         else:
-            penalty = self.rounds_late / ONE_WEEK
+            penalty = self.rounds_late / timedelta(weeks=1)
             penalty *= LATE_PENALTY
             debt = min(0, 5 - penalty)
             debt += self.paid
