@@ -4,11 +4,11 @@ Most of the Iron Blogger specific logic is book keeping about dates;
 unsurprisingly there are a few generic helpers we need that aren't in the
 standard library.
 """
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from ironblogger import config
 
 # This constant *has* to be defined somewhere, but I can't find it.
-SUNDAY = date(2015, 3, 29).weekday()
+SUNDAY = timedelta(days=date(2015, 3, 29).weekday())
 
 
 def duedate(post_date):
@@ -16,10 +16,11 @@ def duedate(post_date):
 
     preconditions:
 
-        isinstance(post_date, date)
+        isinstance(post_date, datetime)
     """
     weekday = post_date.weekday()
-    return post_date + (timedelta(days=1) * (SUNDAY - weekday))
+    due_date = post_date - timedelta(days=weekday) + SUNDAY
+    return datetime(due_date.year, due_date.month, due_date.day)
 
 
 def rssdate(date_obj, cfg=None):
