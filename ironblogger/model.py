@@ -23,6 +23,8 @@ import jinja2
 import ironblogger.date
 from ironblogger.date import ONE_WEEK, duedate
 
+DEBT_PER_POST = 5
+LATE_PENALTY = 1
 
 feedparser.USER_AGENT = \
         'IronBlogger/git ' + \
@@ -79,6 +81,41 @@ class Blogger(db.Model):
             met.add(duedate(post.timestamp))
         num_duedates = (last_duedate - first_duedate + ONE_WEEK).days / 7
         return num_duedates - len(met)
+
+
+class BloggerRound(db.Model):
+    """A BloggerRound is a record of a blogger's status in a given round.
+
+    You might think of this as a joining table, except that, at present,
+    there's nothing we need to store in a "rounds" table, so the other
+    table doesn't exist yet.
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    due = db.Column(db.DateTime, nullable=False)
+    blogger_id = db.Column(db.Integer, db.ForeignKey('blogger.id'),
+                           nullable=False)
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
+    rounds_late = db.Column(db.Integer, nullable=False)
+    paid = db.Column(db.Integer, nullable=False)      # Amount paid in USD
+    forgiven = db.Column(db.Integer, nullable=False)  # Amount "forgiven" by the admin, in USD.
+
+    blogger = db.relationship('Blogger', backref=db.backref('rounds'))
+    post = db.relationship('Post')
+
+    def owed(self):
+        if not self.post:
+            return DEBT_PER_POST
+        else:
+            penalty = self.rounds_late / ONE_WEEK
+            penalty *= LATE_PENALTY
+            debt = min(0, 5 - penalty)
+            debt += self.paid
+            debt += self.forgiven
+            return debt
+
+    def sanity_check(self):
+        assert self.owed() >= 0
+        assert self.owed() <= DEBT_PER_POST
 
 
 class Blog(db.Model):
