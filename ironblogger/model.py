@@ -95,23 +95,21 @@ class BloggerRound(db.Model):
     blogger_id = db.Column(db.Integer, db.ForeignKey('blogger.id'),
                            nullable=False)
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
-    rounds_late = db.Column(db.Integer, nullable=False)
     paid = db.Column(db.Integer, nullable=False)      # Amount paid in USD
     forgiven = db.Column(db.Integer, nullable=False)  # Amount "forgiven" by the admin, in USD.
 
     blogger = db.relationship('Blogger', backref=db.backref('rounds'))
     post = db.relationship('Post')
 
+    def rounds_late(self):
+        return (self.due - duedate(self.post.timestamp)) / ROUND_LEN
+
     def owed(self):
         if not self.post:
             return DEBT_PER_POST
         else:
-            penalty = self.rounds_late / ROUND_LEN
-            penalty *= LATE_PENALTY
-            debt = min(0, 5 - penalty)
-            debt += self.paid
-            debt += self.forgiven
-            return debt
+            penalty = self.rounds_late() * LATE_PENALTY
+            return min(0, DEBT_PER_POST - penalty) - self.paid - self.forgiven
 
     def sanity_check(self):
         assert self.owed() >= 0
