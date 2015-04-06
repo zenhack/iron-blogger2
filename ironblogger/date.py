@@ -9,6 +9,7 @@ from ironblogger import config
 
 # This constant *has* to be defined somewhere, but I can't find it.
 SUNDAY = timedelta(days=date(2015, 3, 29).weekday())
+ROUND_LEN = timedelta(weeks=1)
 
 
 def duedate(post_date):
