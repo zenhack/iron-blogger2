@@ -15,6 +15,7 @@ from ironblogger.app import app
 from ironblogger.model import Blogger, Blog, MalformedPostError, db
 
 def sync_posts():
+    """Download new posts"""
     logging.info('Syncing posts')
     with app.test_request_context():
         blogs = db.session.query(Blog).all()
