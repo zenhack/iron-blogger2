@@ -45,7 +45,7 @@ def import_bloggers(file):
          * ``feed_url`` is the url for the rss or atom feed for the blog.
 
     ``import_bloggers`` will create the database if it does not exist, and
-    populat it with the contents of ``file``.
+    populate it with the contents of ``file``.
     """
     with app.test_request_context():
         db.create_all()
