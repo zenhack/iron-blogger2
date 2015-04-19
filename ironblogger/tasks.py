@@ -71,6 +71,10 @@ def import_bloggers(file):
         session.commit()
 
 
+def assign_posts(until=None):
+    """Assign posts to rounds."""
+
+
 def sync_posts():
     """Download new posts"""
     logging.info('Syncing posts')

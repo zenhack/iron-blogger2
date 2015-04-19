@@ -73,6 +73,8 @@ class Blogger(db.Model):
                                  due=duedate(round.due + ROUND_LEN))
             db.session.add(round)
 
+    def assign_posts(self, until=None):
+        """Assign the blogger's posts to rounds."""
 
     def missed_posts(self, since=None, until=None):
         """Return the number of posts the blogger has missed.
