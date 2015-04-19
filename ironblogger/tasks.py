@@ -33,18 +33,6 @@ def create_rounds(until=None):
             blogger.create_rounds(until)
 
 
-def sync_posts():
-    """Download new posts"""
-    logging.info('Syncing posts')
-    with app.test_request_context():
-        blogs = db.session.query(Blog).all()
-        for blog in blogs:
-            try:
-                blog.sync_posts()
-            except MalformedPostError as e:
-                logging.info('%s', e)
-
-
 def import_bloggers(file):
     """Import the bloggers (and their blogs) read from ``file``.
 
@@ -81,3 +69,14 @@ def import_bloggers(file):
             session.add(model)
         session.commit()
 
+
+def sync_posts():
+    """Download new posts"""
+    logging.info('Syncing posts')
+    with app.test_request_context():
+        blogs = db.session.query(Blog).all()
+        for blog in blogs:
+            try:
+                blog.sync_posts()
+            except MalformedPostError as e:
+                logging.info('%s', e)
