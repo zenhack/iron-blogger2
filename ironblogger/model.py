@@ -40,8 +40,8 @@ class MalformedPostError(Exception):
 
 class Blogger(db.Model):
     """An Iron Blogger participant."""
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False, unique=True)
+    id         = db.Column(db.Integer,  primary_key=True)
+    name       = db.Column(db.String,   nullable=False, unique=True)
     start_date = db.Column(db.DateTime, nullable=False)
 
     def __init__(self, name, start_date, blogs=None):
@@ -116,16 +116,15 @@ class BloggerRound(db.Model):
     there's nothing we need to store in a "rounds" table, so the other
     table doesn't exist yet.
     """
-    id = db.Column(db.Integer, primary_key=True)
-    due = db.Column(db.DateTime, nullable=False)
-    blogger_id = db.Column(db.Integer, db.ForeignKey('blogger.id'),
-                           nullable=False)
-    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
-    paid = db.Column(db.Integer, nullable=False, default=0)      # Amount paid in USD
-    forgiven = db.Column(db.Integer, nullable=False, default=0)  # Amount "forgiven" by the admin, in USD.
+    id         = db.Column(db.Integer,  primary_key=True)
+    blogger_id = db.Column(db.Integer,  db.ForeignKey('blogger.id'), nullable=False)
+    post_id    = db.Column(db.Integer,  db.ForeignKey('post.id'))
+    due        = db.Column(db.DateTime, nullable=False)
+    paid       = db.Column(db.Integer,  nullable=False, default=0)      # Amount paid in USD
+    forgiven   = db.Column(db.Integer,  nullable=False, default=0)  # Amount "forgiven" by the admin, in USD.
 
     blogger = db.relationship('Blogger', backref=db.backref('rounds'))
-    post = db.relationship('Post')
+    post    = db.relationship('Post')
 
     def rounds_late(self):
         return (self.due - duedate(self.post.timestamp)) / ROUND_LEN
@@ -144,26 +143,17 @@ class BloggerRound(db.Model):
 
 class Blog(db.Model):
     """A blog. bloggers may have more than one of these."""
-    id = db.Column(db.Integer, primary_key=True)
-    blogger_id = db.Column(db.Integer, db.ForeignKey('blogger.id'),
-                           nullable=False)
+    id         = db.Column(db.Integer, primary_key=True)
+    blogger_id = db.Column(db.Integer, db.ForeignKey('blogger.id'), nullable=False)
+    title      = db.Column(db.String, nullable=False)
+    page_url   = db.Column(db.String, nullable=False)  # Human readable webpage
+    feed_url   = db.Column(db.String, nullable=False)  # Atom/RSS feed
+    # Metadata for caching:
+    etag       = db.Column(db.String)  # see: https://pythonhosted.org/feedparser/http-etag.html
+    modified   = db.Column(db.String)  # We don't bother parsing this; it's only for the server's
+                                       # Benefit.
+
     blogger = db.relationship('Blogger', backref=db.backref('blogs'))
-    title = db.Column(db.String, nullable=False)
-
-    # Human readable webpage:
-    page_url = db.Column(db.String, nullable=False)
-
-    # Atom/RSS feed:
-    feed_url = db.Column(db.String, nullable=False)
-
-    # Metadata needed for caching, see:
-    #
-    #     https://pythonhosted.org/feedparser/http-etag.html:
-    #
-    etag = db.Column(db.String)
-    # We don't bother parsing the modification date, and instead treat it as an
-    # opaque string meaningful only to the server:
-    modified = db.Column(db.String)
 
     def sync_posts(self):
         logging.info('Syncing posts for blog %r by %r',
@@ -218,17 +208,15 @@ class Blog(db.Model):
 
 class Post(db.Model):
     """A blog post."""
-    id = db.Column(db.Integer, primary_key=True)
-    blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'), nullable=False)
+    id        = db.Column(db.Integer,  primary_key=True)
+    blog_id   = db.Column(db.Integer,  db.ForeignKey('blog.id'), nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False)
-    title = db.Column(db.String, nullable=False)
-
+    title     = db.Column(db.String,   nullable=False)
     # The *sanitized* description/summary field from the feed entry. This will
-    # be copied directly to the generated html, so sanitization is critical.
-    summary = db.Column(db.Text, nullable=False)
+    # be copied directly to the generated html, so sanitization is critical:
+    summary   = db.Column(db.Text,     nullable=False)
+    page_url  = db.Column(db.String,   nullable=False)
 
-    # URL for the HTML version of the post.
-    page_url = db.Column(db.String, nullable=False)
     blog = db.relationship('Blog', backref=db.backref('posts'))
 
     @staticmethod
