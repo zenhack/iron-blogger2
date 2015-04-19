@@ -50,6 +50,30 @@ class Blogger(db.Model):
         if blogs is not None:
             self.blogs = blogs
 
+    def create_rounds(self, until=None):
+        """Create any missing BloggerRounds between self.start_date and duedate(until).
+
+        If until is None, it defaults to datetime.now().
+        """
+        if until is None:
+            until = datetime.now()
+
+        round = db.session.query(BloggerRound)\
+            .filter_by(blogger=self)\
+            .order_by(BloggerRound.due.desc())\
+            .first()
+
+        if round is None:
+            round = BloggerRound(blogger=self,
+                                 due=duedate(self.start_date))
+            db.session.add(round)
+
+        while round.due < duedate(until):
+            round = BloggerRound(blogger=self,
+                                 due=duedate(round.due + ROUND_LEN))
+            db.session.add(round)
+
+
     def missed_posts(self, since=None, until=None):
         """Return the number of posts the blogger has missed.
 
@@ -95,8 +119,8 @@ class BloggerRound(db.Model):
     blogger_id = db.Column(db.Integer, db.ForeignKey('blogger.id'),
                            nullable=False)
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
-    paid = db.Column(db.Integer, nullable=False)      # Amount paid in USD
-    forgiven = db.Column(db.Integer, nullable=False)  # Amount "forgiven" by the admin, in USD.
+    paid = db.Column(db.Integer, nullable=False, default=0)      # Amount paid in USD
+    forgiven = db.Column(db.Integer, nullable=False, default=0)  # Amount "forgiven" by the admin, in USD.
 
     blogger = db.relationship('Blogger', backref=db.backref('rounds'))
     post = db.relationship('Post')

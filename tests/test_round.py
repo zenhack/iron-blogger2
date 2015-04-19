@@ -1,0 +1,31 @@
+
+from datetime import datetime
+
+from ironblogger.model import db, Blogger, Blog, BloggerRound
+from ironblogger.app import app
+from ironblogger.wsgi import setup
+
+
+with app.test_request_context():
+    setup({
+        'region'  : 'Boston',
+        'timezone': '-0500',
+        'language': 'en-us',
+        'db_uri'  : 'sqlite:///:memory:',
+    })
+    db.create_all()
+
+    alice = Blogger(name='Alice',
+                    start_date=datetime(2015, 4, 1),
+                    blogs=[
+                        Blog(title='Fun with crypto',
+                             page_url='http://example.com/alice/blog.html',
+                             feed_url='http://example.com/alice/rss.xml',
+                            )])
+    db.session.add(alice)
+
+    alice.create_rounds(datetime(2015, 4, 28))
+    assert len(alice.rounds) == 5
+    #import pdb; pdb.set_trace()
+    alice.create_rounds(datetime(2015, 5, 15))
+    assert len(alice.rounds) == 7
