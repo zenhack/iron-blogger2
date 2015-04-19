@@ -66,7 +66,10 @@ def import_bloggers(file):
             start_date = blogger[1]['start']
             model = Blogger(name, start_date)
             for link in blogger[1]['links']:
-                model.blogs.append(Blog(*link))
+                model.blogs.append(Blog(title=link[0],
+                                        page_url=link[1],
+                                        feed_url=link[2],
+                                        ))
             session.add(model)
         session.commit()
 

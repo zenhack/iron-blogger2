@@ -165,13 +165,6 @@ class Blog(db.Model):
     # opaque string meaningful only to the server:
     modified = db.Column(db.String)
 
-    def __init__(self, title, page_url, feed_url, blogger=None):
-        self.title = title
-        self.page_url = page_url
-        self.feed_url = feed_url
-        if blogger is not None:
-            self.blogger = blogger
-
     def sync_posts(self):
         logging.info('Syncing posts for blog %r by %r',
                      self.title,
