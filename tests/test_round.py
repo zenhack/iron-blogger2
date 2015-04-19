@@ -27,7 +27,6 @@ with app.test_request_context():
 
     alice.create_rounds(datetime(2015, 4, 28))
     assert len(alice.rounds) == 5
-    #import pdb; pdb.set_trace()
     alice.create_rounds(datetime(2015, 5, 15))
     assert len(alice.rounds) == 7
 
