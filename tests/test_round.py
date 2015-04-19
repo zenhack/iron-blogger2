@@ -1,7 +1,7 @@
 
 from datetime import datetime
 
-from ironblogger.model import db, Blogger, Blog, BloggerRound
+from ironblogger.model import db, Blogger, Blog
 from ironblogger.app import app
 from ironblogger.wsgi import setup
 from ironblogger import tasks
