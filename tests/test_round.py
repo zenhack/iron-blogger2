@@ -4,6 +4,7 @@ from datetime import datetime
 from ironblogger.model import db, Blogger, Blog, BloggerRound
 from ironblogger.app import app
 from ironblogger.wsgi import setup
+from ironblogger import tasks
 
 
 with app.test_request_context():
@@ -29,3 +30,21 @@ with app.test_request_context():
     #import pdb; pdb.set_trace()
     alice.create_rounds(datetime(2015, 5, 15))
     assert len(alice.rounds) == 7
+
+
+    bob = Blogger(name='Bob',
+                  start_date=datetime(2015, 4, 8),
+                  blogs=[
+                      Blog(title='Secret messages',
+                           page_url='http://example.com/bob/blog.html',
+                           feed_url='http://example.com/bob/rss.xml',
+                           )])
+    db.session.add(bob)
+
+    tasks.create_rounds(datetime(2015, 5, 15))
+    assert len(alice.rounds) == 7
+    assert len(bob.rounds) == 6
+
+    tasks.create_rounds(datetime(2015, 5, 15))
+    assert len(alice.rounds) == 7
+    assert len(bob.rounds) == 6

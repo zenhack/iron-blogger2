@@ -14,6 +14,25 @@ import logging
 from ironblogger.app import app
 from ironblogger.model import Blogger, Blog, MalformedPostError, db
 
+
+def create_rounds(until=None):
+    """Create missing BloggerRounds for all Bloggers.
+
+    This works like the Blogger class's method of the same name, except that
+    it creates rounds for all bloggers.
+    """
+    # If we left this out, the method would do the same thing, but
+    # if this runs across a round boundary we may get different numbers of
+    # rounds for different bloggers:
+    if until is None:
+        until = datetime.now()
+
+    with app.test_request_context():
+        bloggers = db.session.query(Blogger).all()
+        for blogger in bloggers:
+            blogger.create_rounds(until)
+
+
 def sync_posts():
     """Download new posts"""
     logging.info('Syncing posts')
