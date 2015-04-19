@@ -45,6 +45,14 @@ with app.test_request_context():
     assert len(alice.rounds) == 7
     assert len(bob.rounds) == 6
 
+    # Make sure create_rounds is idempotent:
     tasks.create_rounds(datetime(2015, 5, 15))
     assert len(alice.rounds) == 7
     assert len(bob.rounds) == 6
+
+
+    # The default arg is meant/useful for testing, but let's at least make sure
+    # it doesn't blow up if we don't supply it:
+    tasks.create_rounds()
+    bob.create_rounds()
+    alice.create_rounds()
