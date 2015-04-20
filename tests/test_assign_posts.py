@@ -20,7 +20,7 @@ with app.test_request_context():
     # * Posts on time in the first week
     # * Misses week 2
     # * Posts twice in week 3
-    # * Misses weeks 4 and 5.
+    # * Misses weeks 4 and 5
     alice = Blogger(name='Alice',
                     start_date=datetime(2015, 4, 1),
                     blogs=[
@@ -56,10 +56,9 @@ with app.test_request_context():
 
     def _get_week(when):
         return db.session.query(BloggerRound)\
-            .filter_by(due=duedate(datetime(2015, 4, 1))).one()
+            .filter_by(due=duedate(when)).one()
 
-    assert _get_week(datetime(2015, 4, 1)).post.title.contains("BREAKING:")
-    assert _get_week(datetime(2015, 4, 8)).post.title == "Security Breach"
-    assert _get_week(datetime(2015, 4, 15)).post.title.contains("Javascript")
+    assert "BREAKING:" in _get_week(datetime(2015, 4, 1)).post.title
+    assert "Security Breach" == _get_week(datetime(2015, 4, 8)).post.title
+    assert "Javascript" in _get_week(datetime(2015, 4, 15)).post.title
     assert _get_week(datetime(2015, 4, 22)).post is None
-    assert _get_week(datetime(2015, 4, 29)).post is None

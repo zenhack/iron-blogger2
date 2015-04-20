@@ -76,6 +76,32 @@ class Blogger(db.Model):
     def assign_posts(self, until=None):
         """Assign the blogger's posts to rounds."""
 
+        if until is None:
+            until = datetime.now()
+
+        # Get all of the rounds with no post, which are recent enough for the
+        # blogger to get credit:
+        rounds = db.session.query(BloggerRound)\
+            .filter(BloggerRound.post == None,
+                    BloggerRound.due > duedate(until) - ROUND_LEN * (DEBT_PER_POST / LATE_PENALTY),
+                    BloggerRound.blogger_id == self.id)\
+            .order_by(BloggerRound.due).all()
+
+        for round in rounds:
+            # Get the earliest post that could count towards this round. For a
+            # post to be eligible, it must:
+            #
+            # * Not already have a round assigned
+            # * Be posted sometime after the round begins
+            # * Be written by the correct blogger (duh, but important)
+            round.post = db.session.query(Post)\
+                .filter(Post.round == None,
+                        Post.timestamp > round.due - ROUND_LEN,
+                        Post.blog_id == Blog.id,
+                        Blog.blogger_id == round.blogger_id)\
+                .order_by(Post.timestamp).first()  # conveniently, this returns None if there's no
+                                                   # post.
+
     def missed_posts(self, since=None, until=None):
         """Return the number of posts the blogger has missed.
 
@@ -118,13 +144,13 @@ class BloggerRound(db.Model):
     """
     id         = db.Column(db.Integer,  primary_key=True)
     blogger_id = db.Column(db.Integer,  db.ForeignKey('blogger.id'), nullable=False)
-    post_id    = db.Column(db.Integer,  db.ForeignKey('post.id'))
+    post_id    = db.Column(db.Integer,  db.ForeignKey('post.id'),    unique=True)
     due        = db.Column(db.DateTime, nullable=False)
-    paid       = db.Column(db.Integer,  nullable=False, default=0)      # Amount paid in USD
+    paid       = db.Column(db.Integer,  nullable=False, default=0)  # Amount paid in USD
     forgiven   = db.Column(db.Integer,  nullable=False, default=0)  # Amount "forgiven" by the admin, in USD.
 
     blogger = db.relationship('Blogger', backref=db.backref('rounds'))
-    post    = db.relationship('Post')
+    post    = db.relationship('Post', backref=db.backref('round', uselist=False))
 
     def rounds_late(self):
         return (self.due - duedate(self.post.timestamp)) / ROUND_LEN
