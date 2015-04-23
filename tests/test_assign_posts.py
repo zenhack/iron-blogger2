@@ -5,11 +5,7 @@ from ironblogger.model import db, Blogger, Blog, BloggerRound, Post
 from ironblogger.app import app
 from ironblogger.wsgi import setup
 from ironblogger.date import duedate
-
-
-def _get_week(when):
-    return db.session.query(BloggerRound)\
-        .filter_by(due=duedate(when)).one()
+from ironblogger import tasks
 
 
 class Test_assign_posts(unittest.TestCase):
@@ -63,13 +59,18 @@ class Test_assign_posts(unittest.TestCase):
         self.end_date = datetime(2015, 4, 28)
 
     def tearDown(self):
+        db.drop_all()
         self.ctx.pop()
 
+    def _get_week(self, when):
+        return db.session.query(BloggerRound)\
+            .filter_by(due=duedate(when)).one()
+
     def verify_assignments(self):
-        assert "BREAKING:" in _get_week(datetime(2015, 4, 1)).post.title
-        assert "Security Breach" == _get_week(datetime(2015, 4, 8)).post.title
-        assert "Javascript" in _get_week(datetime(2015, 4, 15)).post.title
-        assert _get_week(datetime(2015, 4, 22)).post is None
+        assert "BREAKING:" in self._get_week(datetime(2015, 4, 1)).post.title
+        assert "Security Breach" == self._get_week(datetime(2015, 4, 8)).post.title
+        assert "Javascript" in self._get_week(datetime(2015, 4, 15)).post.title
+        assert self._get_week(datetime(2015, 4, 22)).post is None
 
     def test_blogger_method(self):
         """Test the assign_posts method of the Blogger class"""
@@ -79,3 +80,10 @@ class Test_assign_posts(unittest.TestCase):
 
         # Just make sure this doesn't explode:
         self.alice.assign_posts()
+
+    def test_tasks_function(self):
+        tasks.create_rounds(self.end_date)
+        tasks.assign_posts(self.end_date)
+        self.verify_assignments()
+
+        tasks.assign_posts()
