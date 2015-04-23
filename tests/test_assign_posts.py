@@ -60,20 +60,22 @@ class Test_assign_posts(unittest.TestCase):
                                 )])
         db.session.add(alice)
         self.alice = alice
+        self.end_date = datetime(2015, 4, 28)
 
     def tearDown(self):
         self.ctx.pop()
 
-    def test_blogger_method(self):
-        """Test the assign_posts method of the Blogger class"""
-        end_date = datetime(2015, 4, 28)
-        self.alice.create_rounds(end_date)
-        self.alice.assign_posts(end_date)
-
+    def verify_assignments(self):
         assert "BREAKING:" in _get_week(datetime(2015, 4, 1)).post.title
         assert "Security Breach" == _get_week(datetime(2015, 4, 8)).post.title
         assert "Javascript" in _get_week(datetime(2015, 4, 15)).post.title
         assert _get_week(datetime(2015, 4, 22)).post is None
+
+    def test_blogger_method(self):
+        """Test the assign_posts method of the Blogger class"""
+        self.alice.create_rounds(self.end_date)
+        self.alice.assign_posts(self.end_date)
+        self.verify_assignments()
 
         # Just make sure this doesn't explode:
         self.alice.assign_posts()
