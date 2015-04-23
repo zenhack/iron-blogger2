@@ -15,7 +15,7 @@
 
 import sys
 
-from ironblogger.tasks import import_bloggers, sync_posts
+from ironblogger.tasks import import_bloggers, sync_posts, update_books
 from ironblogger.app import app
 
 
@@ -26,6 +26,7 @@ def usage(exit_status=1):
         "    ironblogger import         # import bloggers from yaml file.",
         "    ironblogger serve          # start the app server (in debug mode).",
         "    ironblogger sync-posts     # syncronize posts with blogs.",
+        "    ironblogger update-books   # Update books -- who owes what, etc.",
         "    ironblogger help           # show this help message.",
         "    ironblogger help <command> # show detailed help for <command>.",
     ])
@@ -48,5 +49,6 @@ def main():
         'import': lambda: import_bloggers(sys.stdin),
         'serve': lambda: app.run(debug=True),
         'sync-posts': sync_posts,
+        'update-books': update_books,
     }
     commands[sys.argv[1]]()

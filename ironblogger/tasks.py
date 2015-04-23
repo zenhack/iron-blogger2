@@ -21,10 +21,10 @@ def assign_posts(until=None):
     if until is None:
         until = datetime.now()
 
-    with app.test_request_context():
-        bloggers = db.session.query(Blogger).all()
-        for blogger in bloggers:
-            blogger.assign_posts(until)
+    bloggers = db.session.query(Blogger).all()
+    for blogger in bloggers:
+        blogger.assign_posts(until)
+    db.session.commit()
 
 
 def create_rounds(until=None):
@@ -39,10 +39,10 @@ def create_rounds(until=None):
     if until is None:
         until = datetime.now()
 
-    with app.test_request_context():
-        bloggers = db.session.query(Blogger).all()
-        for blogger in bloggers:
-            blogger.create_rounds(until)
+    bloggers = db.session.query(Blogger).all()
+    for blogger in bloggers:
+        blogger.create_rounds(until)
+    db.session.commit()
 
 
 def import_bloggers(file):
@@ -95,3 +95,13 @@ def sync_posts():
                 blog.sync_posts()
             except MalformedPostError as e:
                 logging.info('%s', e)
+
+
+def update_books():
+    with app.test_request_context():
+        logging.info("Updating books")
+        until = datetime.now()
+        logging.info("Creating rounds")
+        create_rounds(until)
+        logging.info("Assigning posts")
+        assign_posts(until)

@@ -153,14 +153,18 @@ class BloggerRound(db.Model):
     post    = db.relationship('Post', backref=db.backref('round', uselist=False))
 
     def rounds_late(self):
-        return (self.due - duedate(self.post.timestamp)) / ROUND_LEN
+        # timedelta doesn't have a divide operator, so we convert to actual
+        # numbers first:
+        seconds_late = (duedate(self.post.timestamp) - self.due).total_seconds()
+        round_seconds = ROUND_LEN.total_seconds()
+        return int(seconds_late/round_seconds)
 
     def owed(self):
         if not self.post:
             return DEBT_PER_POST
         else:
             penalty = self.rounds_late() * LATE_PENALTY
-            return min(0, DEBT_PER_POST - penalty) - self.paid - self.forgiven
+            return min(DEBT_PER_POST, penalty) - self.paid - self.forgiven
 
     def sanity_check(self):
         assert self.owed() >= 0

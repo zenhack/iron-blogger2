@@ -14,10 +14,10 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>
 import flask
 from flask import make_response
-from ironblogger.model import db, Blogger, Post
+from ironblogger.model import db, Blogger, Post, BloggerRound
 from ironblogger.app import app
 from ironblogger import config
-from ironblogger.date import rssdate
+from ironblogger.date import rssdate, duedate
 
 
 def render_template(*args, **kwargs):
@@ -32,9 +32,12 @@ def show_index():
 
 @app.route('/status')
 def show_status():
-    blogger_debts = [(blogger, '$%d' % (5 * blogger.missed_posts()))
-                     for blogger in db.session.query(Blogger).all()]
-    return render_template('status.html', blogger_debts=blogger_debts)
+    blogger_statuses = db.session.query(Blogger, BloggerRound)\
+        .filter(Blogger.id == BloggerRound.blogger_id)\
+        .order_by(BloggerRound.due.desc())\
+        .all()
+    return render_template('status.html',
+                           statuses=blogger_statuses)
 
 
 @app.route('/bloggers')
