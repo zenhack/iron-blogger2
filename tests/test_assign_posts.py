@@ -62,3 +62,6 @@ with app.test_request_context():
     assert "Security Breach" == _get_week(datetime(2015, 4, 8)).post.title
     assert "Javascript" in _get_week(datetime(2015, 4, 15)).post.title
     assert _get_week(datetime(2015, 4, 22)).post is None
+
+    # Just make sure this doesn't explode:
+    alice.assign_posts()
