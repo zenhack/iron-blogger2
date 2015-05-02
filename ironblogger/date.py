@@ -20,7 +20,9 @@ def duedate(post_date):
         isinstance(post_date, datetime)
     """
     weekday = post_date.weekday()
-    due_date = post_date - timedelta(days=weekday) + SUNDAY
+    # The due date should be upcoming *end* of a Sunday, hence the +1. Without
+    # this, a timestamp on a Sunday would always come *after* its duedate.
+    due_date = post_date - timedelta(days=weekday) + SUNDAY + timedelta(days=1)
     return datetime(due_date.year, due_date.month, due_date.day)
 
 
