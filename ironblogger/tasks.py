@@ -21,6 +21,10 @@ def with_context(task):
         task()
 
 
+def init_db():
+    db.create_all()
+
+
 def assign_rounds(since=None, until=None):
     """Assign posts to rounds."""
     if until is None:
@@ -62,7 +66,6 @@ def import_bloggers(file):
     ``import_bloggers`` will create the database if it does not exist, and
     populate it with the contents of ``file``.
     """
-    db.create_all()
     session = db.session
 
     yml = yaml.load(file)

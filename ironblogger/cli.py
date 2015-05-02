@@ -23,6 +23,7 @@ def usage(exit_status=1):
     usage = '\n'.join([
         "Usage:",
         "",
+        "    ironblogger init-db        # initialize the database.",
         "    ironblogger import         # import bloggers from yaml file.",
         "    ironblogger serve          # start the app server (in debug mode).",
         "    ironblogger sync-posts     # syncronize posts with blogs.",
@@ -46,6 +47,7 @@ def main():
         usage()
     commands = {
         'help': lambda: show_help(*sys.argv[2:]),
+        'init-db': init_db,
         'import': lambda: import_bloggers(sys.stdin),
         'serve': lambda: app.run(debug=True),
         'sync-posts': sync_posts,
