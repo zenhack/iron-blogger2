@@ -85,7 +85,7 @@ class Blogger(db.Model):
             .filter(BloggerRound.post == None,
                     BloggerRound.due > duedate(until) - ROUND_LEN * (DEBT_PER_POST / LATE_PENALTY),
                     BloggerRound.blogger_id == self.id)\
-            .order_by(BloggerRound.due).all()
+            .order_by(BloggerRound.due.desc()).all()
 
         for round in rounds:
             # Get the earliest post that could count towards this round. For a
