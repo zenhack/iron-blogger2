@@ -1,14 +1,14 @@
 from datetime import datetime
 import unittest
 
-from ironblogger.model import db, Blogger, Blog, BloggerRound, Post
+from ironblogger.model import db, Blogger, Blog, Post
 from ironblogger.app import app
 from ironblogger.wsgi import setup
 from ironblogger.date import duedate
 from ironblogger import tasks
 
 
-class Test_assign_posts(unittest.TestCase):
+class Test_assign_rounds(unittest.TestCase):
 
     def setUp(self):
         self.ctx = app.test_request_context()
@@ -63,27 +63,18 @@ class Test_assign_posts(unittest.TestCase):
         self.ctx.pop()
 
     def _get_week(self, when):
-        return db.session.query(BloggerRound)\
-            .filter_by(due=duedate(when)).one()
+        return db.session.query(Post)\
+            .filter_by(counts_for=duedate(when)).first()
 
     def verify_assignments(self):
-        assert "BREAKING:" in self._get_week(datetime(2015, 4, 1)).post.title
-        assert "Security Breach" == self._get_week(datetime(2015, 4, 15)).post.title
-        assert "Javascript" in self._get_week(datetime(2015, 4, 8)).post.title
-        assert self._get_week(datetime(2015, 4, 22)).post is None
+        assert "BREAKING:" in self._get_week(datetime(2015, 4, 1)).title
+        assert "Security Breach" == self._get_week(datetime(2015, 4, 15)).title
+        assert "Javascript" in self._get_week(datetime(2015, 4, 8)).title
+        assert self._get_week(datetime(2015, 4, 22)) is None
 
-    def test_blogger_method(self):
-        """Test the assign_posts method of the Blogger class"""
-        self.alice.create_rounds(self.end_date)
-        self.alice.assign_posts(until=self.end_date)
+    def test_tasks_function(self):
+        tasks.assign_rounds(until=self.end_date)
         self.verify_assignments()
 
         # Just make sure this doesn't explode:
-        self.alice.assign_posts()
-
-    def test_tasks_function(self):
-        tasks.create_rounds(self.end_date)
-        tasks.assign_posts(until=self.end_date)
-        self.verify_assignments()
-
-        tasks.assign_posts()
+        tasks.assign_rounds()

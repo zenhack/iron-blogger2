@@ -14,10 +14,11 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>
 import flask
 from flask import make_response
-from ironblogger.model import db, Blogger, Post, BloggerRound
+from ironblogger.model import db, Blogger, Blog, Post
 from ironblogger.app import app
 from ironblogger import config
 from ironblogger.date import rssdate, duedate
+from collections import defaultdict
 
 
 def render_template(*args, **kwargs):
@@ -32,12 +33,27 @@ def show_index():
 
 @app.route('/status')
 def show_status():
-    blogger_statuses = db.session.query(Blogger, BloggerRound)\
-        .filter(Blogger.id == BloggerRound.blogger_id)\
-        .order_by(BloggerRound.due.desc())\
-        .all()
+    posts = db.session.query(Post)\
+        .filter(Post.blog_id == Blog.id,
+                Blog.blogger_id == Blogger.id,
+                Post.timestamp >= Blogger.start_date).all()
+    rounds = defaultdict(list)
+    for post in posts:
+        post_view = {
+            'title': post.title,
+            'page_url'  : post.page_url,
+            'author'    : post.blog.blogger.name,
+            'blog_title': post.blog.title,
+            'blog_url'  : post.blog.page_url,
+            'timestamp' : post.timestamp,
+            'counts_for': post.counts_for,
+            'late?'     : duedate(post.timestamp) != post.counts_for,
+        }
+        rounds[duedate(post.timestamp)].append(post_view)
+        if post_view['counts_for'] is not None and post_view['late?']:
+            rounds[post.counts_for].append(post_view)
     return render_template('status.html',
-                           statuses=blogger_statuses)
+                           rounds=sorted(rounds.iteritems(), reverse=True))
 
 
 @app.route('/bloggers')

@@ -12,7 +12,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>
-from datetime import datetime, timedelta
+from datetime import datetime
 import time
 import logging
 
@@ -49,91 +49,6 @@ class Blogger(db.Model):
         self.start_date = start_date
         if blogs is not None:
             self.blogs = blogs
-
-    def create_rounds(self, until=None):
-        """Create any missing BloggerRounds between self.start_date and duedate(until).
-
-        If until is None, it defaults to datetime.now().
-        """
-        if until is None:
-            until = datetime.now()
-
-        round = db.session.query(BloggerRound)\
-            .filter_by(blogger=self)\
-            .order_by(BloggerRound.due.desc())\
-            .first()
-
-        if round is None:
-            round = BloggerRound(blogger=self,
-                                 due=duedate(self.start_date))
-            db.session.add(round)
-
-        while round.due < duedate(until):
-            round = BloggerRound(blogger=self,
-                                 due=duedate(round.due + ROUND_LEN))
-            db.session.add(round)
-
-    def assign_posts(self, since=None, until=None):
-        """Assign the blogger's posts to rounds."""
-
-        if until is None:
-            until = datetime.now()
-        if since is None:
-            since = duedate(self.start_date)
-        since = min(since, self.start_date)  # If the caller specifies to early a since...
-
-        # Get all of the rounds with no post, which are recent enough for the
-        # blogger to get credit:
-        rounds = db.session.query(BloggerRound)\
-            .filter(BloggerRound.post == None,
-                    BloggerRound.due >= since,
-                    BloggerRound.blogger_id == self.id)\
-            .order_by(BloggerRound.due.desc()).all()
-
-        for round in rounds:
-            # Get the earliest post that could count towards this round. For a
-            # post to be eligible, it must:
-            #
-            # * Not already have a round assigned
-            # * Be posted sometime after the round begins
-            # * Be posted recently enough to get *some* credit
-            # * Be written by the correct blogger (duh, but important)
-            last_eligible_date = round.due + ROUND_LEN * (DEBT_PER_POST / LATE_PENALTY)
-            round.post = db.session.query(Post)\
-                .filter(Post.round == None,
-                        Post.timestamp > round.due - ROUND_LEN,
-                        Post.timestamp < last_eligible_date,
-                        Post.blog_id == Blog.id,
-                        Blog.blogger_id == round.blogger_id)\
-                .order_by(Post.timestamp).first()  # conveniently, this returns None if there's no
-
-
-class BloggerRound(db.Model):
-    """A BloggerRound is a record of a blogger's status in a given round.
-
-    You might think of this as a joining table, except that, at present,
-    there's nothing we need to store in a "rounds" table, so the other
-    table doesn't exist yet.
-    """
-    id         = db.Column(db.Integer,  primary_key=True)
-    blogger_id = db.Column(db.Integer,  db.ForeignKey('blogger.id'), nullable=False)
-    post_id    = db.Column(db.Integer,  db.ForeignKey('post.id'),    unique=True)
-    due        = db.Column(db.DateTime, nullable=False)
-
-    blogger = db.relationship('Blogger', backref=db.backref('rounds'))
-    post    = db.relationship('Post', backref=db.backref('round', uselist=False))
-
-    def rounds_late(self):
-        # timedelta doesn't have a divide operator, so we convert to actual
-        # numbers first:
-        seconds_late = (duedate(self.post.timestamp) - self.due).total_seconds()
-        round_seconds = ROUND_LEN.total_seconds()
-        return int(seconds_late/round_seconds)
-
-    def sanity_check(self):
-        assert self.owed() >= 0
-        assert self.owed() <= DEBT_PER_POST
-
 
 class Blog(db.Model):
     """A blog. bloggers may have more than one of these."""
@@ -202,16 +117,17 @@ class Blog(db.Model):
 
 class Post(db.Model):
     """A blog post."""
-    id        = db.Column(db.Integer,  primary_key=True)
-    blog_id   = db.Column(db.Integer,  db.ForeignKey('blog.id'), nullable=False)
-    timestamp = db.Column(db.DateTime, nullable=False)
-    title     = db.Column(db.String,   nullable=False)
+    id         = db.Column(db.Integer,  primary_key=True)
+    blog_id    = db.Column(db.Integer,  db.ForeignKey('blog.id'), nullable=False)
+    timestamp  = db.Column(db.DateTime, nullable=False)
+    counts_for = db.Column(db.DateTime)
+    title      = db.Column(db.String,   nullable=False)
     # The *sanitized* description/summary field from the feed entry. This will
     # be copied directly to the generated html, so sanitization is critical:
-    summary   = db.Column(db.Text,     nullable=False)
-    page_url  = db.Column(db.String,   nullable=False)
+    summary    = db.Column(db.Text,     nullable=False)
+    page_url   = db.Column(db.String,   nullable=False)
 
-    blog = db.relationship('Blog', backref=db.backref('posts'))
+    blog  = db.relationship('Blog',  backref=db.backref('posts'))
 
     @staticmethod
     def _get_pub_date(feed_entry):
@@ -290,3 +206,36 @@ class Post(db.Model):
 
     def rssdate(self):
         return ironblogger.date.rssdate(self.timestamp)
+
+    def assign_round(self):
+        # Get all of the dates that this post could count for, but which are
+        # "taken" by other posts.
+        oldest_valid_duedate = duedate(self.timestamp) - ROUND_LEN * (DEBT_PER_POST / LATE_PENALTY)
+        oldest_valid_duedate = max(oldest_valid_duedate, duedate(self.blog.blogger.start_date))
+        dates = db.session.query(Post.counts_for)\
+            .filter(Post.counts_for != None,
+                    Post.counts_for <= duedate(self.timestamp),
+                    Post.counts_for > oldest_valid_duedate,
+                    Post.blog_id == Blog.id,
+                    Blog.blogger_id == self.blog.blogger.id)\
+            .order_by(Post.counts_for.desc())\
+            .all()
+        dates = set([date[0] for date in dates])
+
+        # Assign the most recent round this post can count for.
+        round = duedate(self.timestamp)
+        while round >= oldest_valid_duedate:
+            if round not in dates:
+                self.counts_for = round
+                break
+            round -= ROUND_LEN
+
+    def rounds_late(self):
+        if self.counts_for is None:
+            return None
+
+        # timedelta doesn't have a divide operator, so we convert to actual
+        # numbers first:
+        seconds_late = (duedate(self.timestamp) - self.counts_for).total_seconds()
+        round_seconds = ROUND_LEN.total_seconds()
+        return int(seconds_late/round_seconds)

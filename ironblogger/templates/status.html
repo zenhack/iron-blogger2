@@ -1,28 +1,33 @@
 {% extends "layout.html" %}
 {% block content %}
 
+{% for round, posts in rounds %}
+<h2>Round ending {{ round }}</h2>
+
 <table>
 	<tr>
-		<th>Blogger</th>
-		<th>Round Ending</th>
+		<th>Author</th>
 		<th>Post</th>
-		<th>Post Date</th>
-		<th>Rounds Late</th>
+		<th>Blog</th>
+		<th>Date</th>
 	</tr>
-	{% for blogger, round in statuses %}
+	{% for post in posts %}
 	<tr>
-		<td>{{ blogger.name }}</td>
-		<td>{{ round.due }}</td>
-		{% if round.post == None %}
-		<td>N/A</td>
-		<td>N/A</td>
-		<td>N/A</td>
-		{% else %}
-		<td><a href="{{ round.post.page_url }}">{{ round.post.title }}</a></td>
-		<td>{{ round.post.timestamp }}</td>
-		<td>{{ round.rounds_late() }}</td>
-		{% endif %}
+		<td>{{ post['author'] }}</td>
+		<td><a href="{{ post.page_url }}">{{ post.title }}</a></td>
+		<td><a href="{{ post['blog_url'] }}">{{ post['blog_title'] }}</a></td>
+		<td>
+			{{ post['timestamp'] }}
+			{% if post['counts_for'] == None %}
+			(Bonus!)
+			{% elif post['counts_for'] < round %}
+			(Late, counts for {{ post['counts_for'] }})
+			{% elif post['late?'] %}
+			(Late)
+			{% endif %}
+		</td>
 	</tr>
 	{% endfor %}
 </table>
+{% endfor %}
 {% endblock %}

@@ -13,35 +13,30 @@ import logging
 from datetime import datetime
 
 from ironblogger.app import app
-from ironblogger.model import Blogger, Blog, MalformedPostError, db
+from ironblogger.model import Blogger, Blog, Post, MalformedPostError, db, ROUND_LEN
 
 
-def assign_posts(since=None, until=None):
+def with_context(task):
+    with app.test_request_context():
+        task()
+
+
+def assign_rounds(since=None, until=None):
     """Assign posts to rounds."""
     if until is None:
         until = datetime.now()
+    if since is None:
+        since = db.session.query(Blogger.start_date)\
+                          .order_by(Blogger.start_date).first()[0]
 
-    bloggers = db.session.query(Blogger).all()
-    for blogger in bloggers:
-        blogger.assign_posts(since, until)
-    db.session.commit()
+    posts = db.session.query(Post)\
+        .filter(Post.counts_for == None,
+                Post.timestamp >= since,
+                Post.timestamp <= until).all()
 
+    for post in posts:
+        post.assign_round()
 
-def create_rounds(until=None):
-    """Create missing BloggerRounds for all Bloggers.
-
-    This works like the Blogger class's method of the same name, except that
-    it creates rounds for all bloggers.
-    """
-    # If we left this out, the method would do the same thing, but
-    # if this runs across a round boundary we may get different numbers of
-    # rounds for different bloggers:
-    if until is None:
-        until = datetime.now()
-
-    bloggers = db.session.query(Blogger).all()
-    for blogger in bloggers:
-        blogger.create_rounds(until)
     db.session.commit()
 
 
@@ -67,41 +62,29 @@ def import_bloggers(file):
     ``import_bloggers`` will create the database if it does not exist, and
     populate it with the contents of ``file``.
     """
-    with app.test_request_context():
-        db.create_all()
-        session = db.session
+    db.create_all()
+    session = db.session
 
-        yml = yaml.load(file)
-        for blogger in yml.iteritems():
-            name = blogger[0]
-            start_date = blogger[1]['start']
-            model = Blogger(name, start_date)
-            for link in blogger[1]['links']:
-                model.blogs.append(Blog(title=link[0],
-                                        page_url=link[1],
-                                        feed_url=link[2],
-                                        ))
-            session.add(model)
-        session.commit()
+    yml = yaml.load(file)
+    for blogger in yml.iteritems():
+        name = blogger[0]
+        start_date = blogger[1]['start']
+        model = Blogger(name, start_date)
+        for link in blogger[1]['links']:
+            model.blogs.append(Blog(title=link[0],
+                                    page_url=link[1],
+                                    feed_url=link[2],
+                                    ))
+        session.add(model)
+    session.commit()
 
 
 def sync_posts():
     """Download new posts"""
     logging.info('Syncing posts')
-    with app.test_request_context():
-        blogs = db.session.query(Blog).all()
-        for blog in blogs:
-            try:
-                blog.sync_posts()
-            except MalformedPostError as e:
-                logging.info('%s', e)
-
-
-def update_books():
-    with app.test_request_context():
-        logging.info("Updating books")
-        until = datetime.now()
-        logging.info("Creating rounds")
-        create_rounds(until)
-        logging.info("Assigning posts")
-        assign_posts(until)
+    blogs = db.session.query(Blog).all()
+    for blog in blogs:
+        try:
+            blog.sync_posts()
+        except MalformedPostError as e:
+            logging.info('%s', e)
