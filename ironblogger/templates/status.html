@@ -8,7 +8,6 @@
 		<th>Post</th>
 		<th>Post Date</th>
 		<th>Rounds Late</th>
-		<th>Owed</th>
 	</tr>
 	{% for blogger, round in statuses %}
 	<tr>
@@ -23,7 +22,6 @@
 		<td>{{ round.post.timestamp }}</td>
 		<td>{{ round.rounds_late() }}</td>
 		{% endif %}
-		<td>{{ round.owed() }}</td>
 	</tr>
 	{% endfor %}
 </table>
