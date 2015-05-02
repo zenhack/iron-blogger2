@@ -16,14 +16,14 @@ from ironblogger.app import app
 from ironblogger.model import Blogger, Blog, MalformedPostError, db
 
 
-def assign_posts(until=None):
+def assign_posts(since=None, until=None):
     """Assign posts to rounds."""
     if until is None:
         until = datetime.now()
 
     bloggers = db.session.query(Blogger).all()
     for blogger in bloggers:
-        blogger.assign_posts(until)
+        blogger.assign_posts(since, until)
     db.session.commit()
 
 

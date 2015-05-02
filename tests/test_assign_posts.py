@@ -75,7 +75,7 @@ class Test_assign_posts(unittest.TestCase):
     def test_blogger_method(self):
         """Test the assign_posts method of the Blogger class"""
         self.alice.create_rounds(self.end_date)
-        self.alice.assign_posts(self.end_date)
+        self.alice.assign_posts(until=self.end_date)
         self.verify_assignments()
 
         # Just make sure this doesn't explode:
@@ -83,7 +83,7 @@ class Test_assign_posts(unittest.TestCase):
 
     def test_tasks_function(self):
         tasks.create_rounds(self.end_date)
-        tasks.assign_posts(self.end_date)
+        tasks.assign_posts(until=self.end_date)
         self.verify_assignments()
 
         tasks.assign_posts()

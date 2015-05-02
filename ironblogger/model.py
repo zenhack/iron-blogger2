@@ -73,17 +73,20 @@ class Blogger(db.Model):
                                  due=duedate(round.due + ROUND_LEN))
             db.session.add(round)
 
-    def assign_posts(self, until=None):
+    def assign_posts(self, since=None, until=None):
         """Assign the blogger's posts to rounds."""
 
         if until is None:
             until = datetime.now()
+        if since is None:
+            since = duedate(self.start_date)
+        since = min(since, self.start_date)  # If the caller specifies to early a since...
 
         # Get all of the rounds with no post, which are recent enough for the
         # blogger to get credit:
         rounds = db.session.query(BloggerRound)\
             .filter(BloggerRound.post == None,
-                    BloggerRound.due > duedate(until) - ROUND_LEN * (DEBT_PER_POST / LATE_PENALTY),
+                    BloggerRound.due >= since,
                     BloggerRound.blogger_id == self.id)\
             .order_by(BloggerRound.due.desc()).all()
 
@@ -93,10 +96,13 @@ class Blogger(db.Model):
             #
             # * Not already have a round assigned
             # * Be posted sometime after the round begins
+            # * Be posted recently enough to get *some* credit
             # * Be written by the correct blogger (duh, but important)
+            last_eligible_date = round.due + ROUND_LEN * (DEBT_PER_POST / LATE_PENALTY)
             round.post = db.session.query(Post)\
                 .filter(Post.round == None,
                         Post.timestamp > round.due - ROUND_LEN,
+                        Post.timestamp < last_eligible_date,
                         Post.blog_id == Blog.id,
                         Blog.blogger_id == round.blogger_id)\
                 .order_by(Post.timestamp).first()  # conveniently, this returns None if there's no
