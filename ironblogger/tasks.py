@@ -11,9 +11,14 @@ Those which need one create one themselves.
 import yaml
 import logging
 from datetime import datetime
+from os import path
 
+import ironblogger
 from ironblogger.app import app
 from ironblogger.model import Blogger, Blog, Post, MalformedPostError, db, ROUND_LEN
+
+from alembic.config import Config
+from alembic import command
 
 
 def with_context(task):
@@ -23,6 +28,12 @@ def with_context(task):
 
 def init_db():
     db.create_all()
+    alembic_cfg = Config(path.join(
+        path.dirname(ironblogger.__file__),
+        "..",
+        "alembic.ini"
+    ))
+    command.stamp(alembic_cfg, 'head')
 
 
 def assign_rounds(since=None, until=None):
