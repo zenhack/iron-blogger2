@@ -68,8 +68,8 @@ class Test_assign_posts(unittest.TestCase):
 
     def verify_assignments(self):
         assert "BREAKING:" in self._get_week(datetime(2015, 4, 1)).post.title
-        assert "Security Breach" == self._get_week(datetime(2015, 4, 8)).post.title
-        assert "Javascript" in self._get_week(datetime(2015, 4, 15)).post.title
+        assert "Security Breach" == self._get_week(datetime(2015, 4, 15)).post.title
+        assert "Javascript" in self._get_week(datetime(2015, 4, 8)).post.title
         assert self._get_week(datetime(2015, 4, 22)).post is None
 
     def test_blogger_method(self):
