@@ -106,39 +106,6 @@ class Blogger(db.Model):
                         Post.blog_id == Blog.id,
                         Blog.blogger_id == round.blogger_id)\
                 .order_by(Post.timestamp).first()  # conveniently, this returns None if there's no
-                                                   # post.
-
-    def missed_posts(self, since=None, until=None):
-        """Return the number of posts the blogger has missed.
-
-        If since is not None, the result will count starting from since.
-        Otherwise, it will count starting from the blogger's start_date.
-
-        If until is not None, the result will be the number of missed posts up
-        to until. Otherwise, it will be the number of missed posts up to the
-        present.
-        """
-        if since is None:
-            since = self.start_date
-        if until is None:
-            until = datetime.now()
-
-        first_duedate = duedate(since)
-        last_duedate = duedate(until) - ROUND_LEN
-
-        posts = db.session.query(Post).filter(
-            (first_duedate - ROUND_LEN) < Post.timestamp,
-            Post.timestamp < last_duedate,
-            Post.blog_id == Blog.id,
-            Blog.blogger_id == Blogger.id,
-            Blogger.id == self.id,
-        ).all()
-
-        met = set()
-        for post in posts:
-            met.add(duedate(post.timestamp))
-        num_duedates = (last_duedate - first_duedate + ROUND_LEN).days / 7
-        return num_duedates - len(met)
 
 
 class BloggerRound(db.Model):
