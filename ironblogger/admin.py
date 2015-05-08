@@ -10,13 +10,6 @@ class AdminViewMixin(object):
         return login.current_user.is_authenticated() and login.current_user.is_admin
 
 
-class MainView(AdminViewMixin, BaseView):
-
-    @expose('/')
-    def index(self):
-        return self.render('admin-test.html')
-
-
 class AdminModelView(AdminViewMixin, ModelView):
     pass
 
@@ -27,5 +20,4 @@ class UserView(AdminModelView):
 
 
 admin = Admin()
-admin.add_view(MainView(name='test'))
 admin.add_view(UserView(model.User, model.db.session))
