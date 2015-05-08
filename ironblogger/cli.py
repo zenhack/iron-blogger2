@@ -26,6 +26,7 @@ def usage(exit_status=1):
         "    ironblogger init-db        # initialize the database.",
         "    ironblogger import         # import bloggers from yaml file.",
         "    ironblogger serve          # start the app server (in debug mode).",
+        "    ironblogger shell          # start a python shell inside the app context.",
         "    ironblogger sync-posts     # syncronize posts with blogs.",
         "    ironblogger assign-rounds  # assign posts to rounds.",
         "    ironblogger help           # show this help message.",
@@ -50,6 +51,7 @@ def main():
         'init-db': init_db,
         'import': lambda: import_bloggers(sys.stdin),
         'serve': lambda: app.run(debug=True),
+        'shell': shell,
         'sync-posts': sync_posts,
         'assign-rounds': assign_rounds,
     }

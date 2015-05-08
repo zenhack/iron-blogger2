@@ -93,6 +93,16 @@ def import_bloggers(file):
     session.commit()
 
 
+def shell():
+    """Launch a python interpreter.
+
+    The CLI does this inside of an app context, so it's a convienent way to
+    play with the API.
+    """
+    import code
+    code.interact(local=locals())
+
+
 def sync_posts():
     """Download new posts"""
     logging.info('Syncing posts')
