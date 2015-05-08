@@ -1,26 +1,19 @@
 from datetime import datetime
 import unittest
+import pytest
+from tests.util import fresh_context
 
 from ironblogger.model import db, Blogger, Blog, Post
 from ironblogger.app import app
-from ironblogger.wsgi import setup
 from ironblogger.date import duedate
 from ironblogger import tasks
+
+fresh_context = pytest.yield_fixture(autouse=True)(fresh_context)
 
 
 class Test_assign_rounds(unittest.TestCase):
 
     def setUp(self):
-        self.ctx = app.test_request_context()
-        self.ctx.push()
-        setup({
-            'region'  : 'Boston',
-            'timezone': '-0500',
-            'language': 'en-us',
-            'db_uri'  : 'sqlite:///:memory:',
-        })
-        db.create_all()
-
         # During a 5-week period, alice:
         #
         # * Posts on time in the first week
@@ -57,10 +50,6 @@ class Test_assign_rounds(unittest.TestCase):
         db.session.add(alice)
         self.alice = alice
         self.end_date = datetime(2015, 4, 28)
-
-    def tearDown(self):
-        db.drop_all()
-        self.ctx.pop()
 
     def _get_week(self, when):
         return db.session.query(Post)\
