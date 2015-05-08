@@ -1,7 +1,5 @@
 from datetime import date
-from ironblogger.config import setup as app_setup
-from ironblogger import cli
-from ironblogger.app import app
+from ironblogger import tasks
 from ironblogger.model import *
 import os.path
 import pytest
@@ -182,7 +180,7 @@ def test_interrupt_sync():
         blogs[blogger_name] = blog
         db.session.add(blog)
 
-    cli.sync_posts()
+    tasks.sync_posts()
     assert len(blogs['alice'].posts) == 1
     assert len(blogs['mallory'].posts) == 0
     assert len(blogs['bob'].posts) == 1

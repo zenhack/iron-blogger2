@@ -1,3 +1,4 @@
 #!/bin/bash
 cd $OPENSHIFT_REPO_DIR
 ironblogger sync-posts
+ironblogger assign-rounds

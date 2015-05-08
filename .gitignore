@@ -8,3 +8,4 @@ dist
 bloggers.yml
 __pycache__
 *.swp
+.coverage

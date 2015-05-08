@@ -23,8 +23,10 @@ import feedparser
 import jinja2
 
 import ironblogger.date
-from ironblogger.date import ONE_WEEK, duedate
+from ironblogger.date import duedate, ROUND_LEN
 
+DEBT_PER_POST = 5
+LATE_PENALTY = 1
 
 feedparser.USER_AGENT = \
         'IronBlogger/git ' + \
@@ -74,8 +76,8 @@ class User(db.Model, UserMixin):
 
 class Blogger(db.Model):
     """An Iron Blogger participant."""
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False, unique=True)
+    id         = db.Column(db.Integer,  primary_key=True)
+    name       = db.Column(db.String,   nullable=False, unique=True)
     start_date = db.Column(db.DateTime, nullable=False)
 
     def __init__(self, name, start_date, blogs=None):
@@ -84,68 +86,19 @@ class Blogger(db.Model):
         if blogs is not None:
             self.blogs = blogs
 
-    def missed_posts(self, since=None, until=None):
-        """Return the number of posts the blogger has missed.
-
-        If since is not None, the result will count starting from since.
-        Otherwise, it will count starting from the blogger's start_date.
-
-        If until is not None, the result will be the number of missed posts up
-        to until. Otherwise, it will be the number of missed posts up to the
-        present.
-        """
-        if since is None:
-            since = self.start_date
-        if until is None:
-            until = datetime.now()
-
-        first_duedate = duedate(since)
-        last_duedate = duedate(until) - ONE_WEEK
-
-        posts = db.session.query(Post).filter(
-            (first_duedate - ONE_WEEK) < Post.timestamp,
-            Post.timestamp < last_duedate,
-            Post.blog_id == Blog.id,
-            Blog.blogger_id == Blogger.id,
-            Blogger.id == self.id,
-        ).all()
-
-        met = set()
-        for post in posts:
-            met.add(duedate(post.timestamp))
-        num_duedates = (last_duedate - first_duedate + ONE_WEEK).days / 7
-        return num_duedates - len(met)
-
-
 class Blog(db.Model):
     """A blog. bloggers may have more than one of these."""
-    id = db.Column(db.Integer, primary_key=True)
-    blogger_id = db.Column(db.Integer, db.ForeignKey('blogger.id'),
-                           nullable=False)
+    id         = db.Column(db.Integer, primary_key=True)
+    blogger_id = db.Column(db.Integer, db.ForeignKey('blogger.id'), nullable=False)
+    title      = db.Column(db.String, nullable=False)
+    page_url   = db.Column(db.String, nullable=False)  # Human readable webpage
+    feed_url   = db.Column(db.String, nullable=False)  # Atom/RSS feed
+    # Metadata for caching:
+    etag       = db.Column(db.String)  # see: https://pythonhosted.org/feedparser/http-etag.html
+    modified   = db.Column(db.String)  # We don't bother parsing this; it's only for the server's
+                                       # Benefit.
+
     blogger = db.relationship('Blogger', backref=db.backref('blogs'))
-    title = db.Column(db.String, nullable=False)
-
-    # Human readable webpage:
-    page_url = db.Column(db.String, nullable=False)
-
-    # Atom/RSS feed:
-    feed_url = db.Column(db.String, nullable=False)
-
-    # Metadata needed for caching, see:
-    #
-    #     https://pythonhosted.org/feedparser/http-etag.html:
-    #
-    etag = db.Column(db.String)
-    # We don't bother parsing the modification date, and instead treat it as an
-    # opaque string meaningful only to the server:
-    modified = db.Column(db.String)
-
-    def __init__(self, title, page_url, feed_url, blogger=None):
-        self.title = title
-        self.page_url = page_url
-        self.feed_url = feed_url
-        if blogger is not None:
-            self.blogger = blogger
 
     def sync_posts(self):
         logging.info('Syncing posts for blog %r by %r',
@@ -200,18 +153,17 @@ class Blog(db.Model):
 
 class Post(db.Model):
     """A blog post."""
-    id = db.Column(db.Integer, primary_key=True)
-    blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'), nullable=False)
-    timestamp = db.Column(db.DateTime, nullable=False)
-    title = db.Column(db.String, nullable=False)
-
+    id         = db.Column(db.Integer,  primary_key=True)
+    blog_id    = db.Column(db.Integer,  db.ForeignKey('blog.id'), nullable=False)
+    timestamp  = db.Column(db.DateTime, nullable=False)
+    counts_for = db.Column(db.DateTime)
+    title      = db.Column(db.String,   nullable=False)
     # The *sanitized* description/summary field from the feed entry. This will
-    # be copied directly to the generated html, so sanitization is critical.
-    summary = db.Column(db.Text, nullable=False)
+    # be copied directly to the generated html, so sanitization is critical:
+    summary    = db.Column(db.Text,     nullable=False)
+    page_url   = db.Column(db.String,   nullable=False)
 
-    # URL for the HTML version of the post.
-    page_url = db.Column(db.String, nullable=False)
-    blog = db.relationship('Blog', backref=db.backref('posts'))
+    blog  = db.relationship('Blog',  backref=db.backref('posts'))
 
     @staticmethod
     def _get_pub_date(feed_entry):
@@ -289,3 +241,36 @@ class Post(db.Model):
 
     def rssdate(self):
         return ironblogger.date.rssdate(self.timestamp)
+
+    def assign_round(self):
+        # Get all of the dates that this post could count for, but which are
+        # "taken" by other posts.
+        oldest_valid_duedate = duedate(self.timestamp) - ROUND_LEN * (DEBT_PER_POST / LATE_PENALTY)
+        oldest_valid_duedate = max(oldest_valid_duedate, duedate(self.blog.blogger.start_date))
+        dates = db.session.query(Post.counts_for)\
+            .filter(Post.counts_for != None,
+                    Post.counts_for <= duedate(self.timestamp),
+                    Post.counts_for > oldest_valid_duedate,
+                    Post.blog_id == Blog.id,
+                    Blog.blogger_id == self.blog.blogger.id)\
+            .order_by(Post.counts_for.desc())\
+            .all()
+        dates = set([date[0] for date in dates])
+
+        # Assign the most recent round this post can count for.
+        round = duedate(self.timestamp)
+        while round >= oldest_valid_duedate:
+            if round not in dates:
+                self.counts_for = round
+                break
+            round -= ROUND_LEN
+
+    def rounds_late(self):
+        if self.counts_for is None:
+            return None
+
+        # timedelta doesn't have a divide operator, so we convert to actual
+        # numbers first:
+        seconds_late = (duedate(self.timestamp) - self.counts_for).total_seconds()
+        round_seconds = ROUND_LEN.total_seconds()
+        return int(seconds_late/round_seconds)

@@ -1,20 +1,33 @@
 {% extends "layout.html" %}
 {% block content %}
-<p>The numbers here represent each blogger's <em>all time</em> debt, regardless
-of what's been paid, or whether the user has punted. $5 per missing post all the
-way back to the user's start date. This will become more sophisticated in the
-future.</p>
+
+{% for round, posts in rounds %}
+<h2>Round ending {{ round }}</h2>
 
 <table>
 	<tr>
-		<th>Blogger</th>
-		<th>Debt</th>
+		<th>Author</th>
+		<th>Post</th>
+		<th>Blog</th>
+		<th>Date</th>
 	</tr>
-	{% for blogger, debt in blogger_debts %}
+	{% for post in posts %}
 	<tr>
-		<td>{{ blogger.name }}</td>
-		<td>{{ debt }}</td>
+		<td>{{ post['author'] }}</td>
+		<td><a href="{{ post.page_url }}">{{ post.title }}</a></td>
+		<td><a href="{{ post['blog_url'] }}">{{ post['blog_title'] }}</a></td>
+		<td>
+			{{ post['timestamp'] }}
+			{% if post['counts_for'] == None %}
+			(Bonus!)
+			{% elif post['counts_for'] < round %}
+			(Late, counts for {{ post['counts_for'] }})
+			{% elif post['late?'] %}
+			(Late)
+			{% endif %}
+		</td>
 	</tr>
 	{% endfor %}
 </table>
+{% endfor %}
 {% endblock %}
