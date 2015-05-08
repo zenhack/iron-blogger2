@@ -83,7 +83,7 @@ def import_bloggers(file):
     for blogger in yml.iteritems():
         name = blogger[0]
         start_date = blogger[1]['start']
-        model = Blogger(name, start_date)
+        model = Blogger(name=name, start_date=start_date)
         for link in blogger[1]['links']:
             model.blogs.append(Blog(title=link[0],
                                     page_url=link[1],

@@ -80,11 +80,6 @@ class Blogger(db.Model):
     name       = db.Column(db.String,   nullable=False, unique=True)
     start_date = db.Column(db.DateTime, nullable=False)
 
-    def __init__(self, name, start_date, blogs=None):
-        self.name = name
-        self.start_date = start_date
-        if blogs is not None:
-            self.blogs = blogs
 
 class Blog(db.Model):
     """A blog. bloggers may have more than one of these."""

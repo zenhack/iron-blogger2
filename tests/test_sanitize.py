@@ -94,7 +94,7 @@ def to_blog(feedtext):
         name = f.name
         f.write(feedtext)
     try:
-        blogger = Blogger('Mr. Badguy', date(1973, 3, 17))
+        blogger = Blogger(name='Mr. Badguy', start_date=date(1973, 3, 17))
         return Blog(
                 title='Test Blog',
                 page_url='http://www.example.com/blog',
@@ -176,7 +176,7 @@ def test_interrupt_sync():
     }
     for blogger_name in 'alice', 'mallory', 'bob':
         blog = to_blog(rss_feed_template.render(items=blogs[blogger_name]))
-        blog.blogger = Blogger(blogger_name, date(1949, 10, 31))
+        blog.blogger = Blogger(name=blogger_name, start_date=date(1949, 10, 31))
         blogs[blogger_name] = blog
         db.session.add(blog)
 
