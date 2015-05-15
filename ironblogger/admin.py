@@ -19,5 +19,10 @@ class UserView(AdminModelView):
     column_list = ('name', 'is_admin')
 
 
+class PaymentView(AdminModelView):
+    pass
+
+
 admin = Admin()
 admin.add_view(UserView(model.User, model.db.session))
+admin.add_view(PaymentView(model.Payment, model.db.session))

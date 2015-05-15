@@ -80,6 +80,9 @@ class Blogger(db.Model):
     name       = db.Column(db.String,   nullable=False, unique=True)
     start_date = db.Column(db.DateTime, nullable=False)
 
+    def __repr__(self):
+        return self.name
+
 
 class Blog(db.Model):
     """A blog. bloggers may have more than one of these."""
@@ -144,6 +147,17 @@ class Blog(db.Model):
             self.etag = feed.etag
         if hasattr(feed, 'modified'):
             self.modified = feed.modified
+
+
+class Payment(db.Model):
+    id         = db.Column(db.Integer, primary_key=True)
+    blogger_id = db.Column(db.Integer, db.ForeignKey('blogger.id'), nullable=False)
+    amount     = db.Column(db.Integer, nullable=False)  # monetary amount, in units
+                                                        # of $0.01 USD.
+                                                        # Internationalization
+                                                        # is still TODO.
+
+    blogger = db.relationship('Blogger', backref=db.backref('payments'))
 
 
 class Post(db.Model):
