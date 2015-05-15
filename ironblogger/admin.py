@@ -20,7 +20,10 @@ class UserView(AdminModelView):
 
 
 class PaymentView(AdminModelView):
-    pass
+
+    column_formatters = {
+        'amount': lambda v,c,m,n: '$%d.%02d' % (m.amount / 100, m.amount % 100)
+    }
 
 
 admin = Admin()
