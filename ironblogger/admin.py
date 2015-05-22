@@ -2,6 +2,7 @@ from flask.ext.admin import Admin, BaseView, expose
 from flask.ext.admin.contrib.sqla import ModelView
 from flask.ext import login
 from ironblogger import model
+from ironblogger.currency import format_usd
 
 class AdminViewMixin(object):
     """A mixin class which restricts access to admin users."""
@@ -22,7 +23,7 @@ class UserView(AdminModelView):
 class PaymentView(AdminModelView):
 
     column_formatters = {
-        'amount': lambda v,c,m,n: '$%d.%02d' % (m.amount / 100, m.amount % 100)
+        'amount': lambda v,c,m,n: format_usd(m.amount),
     }
 
 

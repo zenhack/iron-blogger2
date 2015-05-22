@@ -23,10 +23,10 @@ import feedparser
 import jinja2
 
 import ironblogger.date
-from ironblogger.date import duedate, ROUND_LEN
+from ironblogger.date import duedate, ROUND_LEN, divide_timedelta
 
-DEBT_PER_POST = 5
-LATE_PENALTY = 1
+DEBT_PER_POST = 500
+LATE_PENALTY = 100
 
 feedparser.USER_AGENT = \
         'IronBlogger/git ' + \
@@ -278,8 +278,5 @@ class Post(db.Model):
         if self.counts_for is None:
             return None
 
-        # timedelta doesn't have a divide operator, so we convert to actual
-        # numbers first:
-        seconds_late = (duedate(self.timestamp) - self.counts_for).total_seconds()
-        round_seconds = ROUND_LEN.total_seconds()
-        return int(seconds_late/round_seconds)
+        return divide_timedelta(duedate(self.timestamp) - self.counts_for,
+                                ROUND_LEN)

@@ -17,11 +17,14 @@ from flask import make_response, request, url_for
 from flask.ext.login import login_user, logout_user, login_required
 
 from ironblogger.app import app, load_user
-from ironblogger.model import db, Blogger, Blog, Post
+from ironblogger.model import db, Blogger, Blog, Post, Payment
+from ironblogger.model import DEBT_PER_POST, LATE_PENALTY
 from ironblogger.app import app
 from ironblogger import config
-from ironblogger.date import rssdate, duedate
+from ironblogger.date import rssdate, duedate, ROUND_LEN, divide_timedelta
+from ironblogger.currency import format_usd
 from collections import defaultdict
+from datetime import datetime
 
 
 def render_template(*args, **kwargs):
@@ -57,6 +60,41 @@ def show_status():
             rounds[post.counts_for].append(post_view)
     return render_template('status.html',
                            rounds=sorted(rounds.iteritems(), reverse=True))
+
+
+@app.route('/ledger')
+def show_ledger():
+    data = []
+    now = datetime.now()
+    bloggers = db.session.query(Blogger).all()
+    for blogger in bloggers:
+        posts = db.session.query(Post)\
+            .filter(Post.counts_for != None,
+                    Post.counts_for >= blogger.start_date,
+                    Post.counts_for < duedate(now),
+                    Post.blog_id == Blog.id,
+                    Blog.blogger_id == blogger.id)\
+            .order_by(Post.counts_for.desc()).all()
+        num_rounds = divide_timedelta(
+            duedate(now - ROUND_LEN) - duedate(blogger.start_date),
+            ROUND_LEN)
+        missed = num_rounds - len(posts)
+        print('%s missed %d posts.' % (blogger.name, missed))
+        incurred = DEBT_PER_POST * missed
+        for post in posts:
+            incurred += post.rounds_late() * LATE_PENALTY
+        paid = 0
+        payments = db.session.query(Payment.amount)\
+            .filter(Payment.blogger_id == blogger.id).all()
+        for payment in payments:
+            paid += payment.amount
+        data.append({
+            'name': blogger.name,
+            'incurred': format_usd(incurred),
+            'paid': format_usd(paid),
+            'owed': format_usd(incurred - paid),
+        })
+    return render_template('ledger.html', bloggers=data)
 
 
 @app.route('/bloggers')

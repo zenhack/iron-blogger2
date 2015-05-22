@@ -39,3 +39,14 @@ def rssdate(date_obj, cfg=None):
     if timezone == '':
         timezone = cfg['timezone']
     return timestamp + timezone
+
+
+def divide_timedelta(numerator, denominator):
+    """Divide two timedelta objects.
+
+    The timedelta type doesn't have it's own divide operator, which
+    is something we need in a few places.
+
+    The return value is of type int, not timedelta.
+    """
+    return numerator.total_seconds()/denominator.total_seconds()
