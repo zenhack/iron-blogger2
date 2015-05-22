@@ -19,7 +19,6 @@ from flask.ext.login import login_user, logout_user, login_required
 from ironblogger.app import app, load_user
 from ironblogger.model import db, Blogger, Blog, Post, Payment
 from ironblogger.model import DEBT_PER_POST, LATE_PENALTY
-from ironblogger.app import app
 from ironblogger import config
 from ironblogger.date import rssdate, duedate, ROUND_LEN, divide_timedelta
 from ironblogger.currency import format_usd
