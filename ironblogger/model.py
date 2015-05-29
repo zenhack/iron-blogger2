@@ -149,6 +149,12 @@ class Blog(db.Model):
             self.modified = feed.modified
 
 
+class Party(db.Model):
+    id    = db.Column(db.Integer, primary_key=True)
+    date  = db.Column(db.Date,    nullable=False)
+    spent = db.Column(db.Integer, nullable=False)
+
+
 class Payment(db.Model):
     id         = db.Column(db.Integer, primary_key=True)
     blogger_id = db.Column(db.Integer, db.ForeignKey('blogger.id'), nullable=False)

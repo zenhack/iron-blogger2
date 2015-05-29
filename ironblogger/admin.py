@@ -27,6 +27,14 @@ class PaymentView(AdminModelView):
     }
 
 
+class PartyView(AdminModelView):
+
+    column_formatters = {
+        'spent': lambda v,c,m,n: format_usd(m.spent),
+    }
+
+
 admin = Admin()
 admin.add_view(UserView(model.User, model.db.session))
 admin.add_view(PaymentView(model.Payment, model.db.session))
+admin.add_view(PartyView(model.Party, model.db.session))

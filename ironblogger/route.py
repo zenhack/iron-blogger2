@@ -17,7 +17,7 @@ from flask import make_response, request, url_for
 from flask.ext.login import login_user, logout_user, login_required
 
 from ironblogger.app import app, load_user
-from ironblogger.model import db, Blogger, Blog, Post, Payment
+from ironblogger.model import db, Blogger, Blog, Post, Payment, Party
 from ironblogger.model import DEBT_PER_POST, LATE_PENALTY
 from ironblogger import config
 from ironblogger.date import rssdate, duedate, ROUND_LEN, divide_timedelta
@@ -66,6 +66,8 @@ def show_ledger():
     data = []
     now = datetime.now()
     bloggers = db.session.query(Blogger).all()
+    total_paid = 0
+    total_incurred = 0
     for blogger in bloggers:
         posts = db.session.query(Post)\
             .filter(Post.counts_for != None,
@@ -93,7 +95,20 @@ def show_ledger():
             'paid': format_usd(paid),
             'owed': format_usd(incurred - paid),
         })
-    return render_template('ledger.html', bloggers=data)
+        total_paid += paid
+        total_incurred += incurred
+    parties = db.session.query(Party).order_by(Party.date.desc()).all()
+    spent = 0
+    for party in parties:
+        spent += party.spent
+    parties = [{'date': party.date, 'spent': format_usd(party.spent)}
+               for party in parties]
+    return render_template(
+        'ledger.html',
+        bloggers=data,
+        parties=parties,
+        budget='%s (%s) collected' % (format_usd(total_incurred - spent),
+                                      format_usd(total_paid)))
 
 
 @app.route('/bloggers')

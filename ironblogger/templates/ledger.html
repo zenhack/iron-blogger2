@@ -22,4 +22,21 @@
 	{% endfor %}
 </table>
 
+<h3>Parties</h3>
+
+<table>
+	<tr>
+		<th>Date</th>
+		<th>Spent</th>
+	</tr>
+	{% for party in parties %}
+	<tr>
+		<td>{{ party['date'] }}</td>
+		<td>{{ party['spent'] }}</td>
+	</tr>
+	{% endfor %}
+</table>
+
+<p>Current Budget: {{ budget }}</p>
+
 {% endblock %}
