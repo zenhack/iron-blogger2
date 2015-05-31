@@ -55,10 +55,15 @@ class Test_assign_rounds(unittest.TestCase):
         return db.session.query(Post)\
             .filter_by(counts_for=duedate(when)).first()
 
+    def verify_assignment(self, when, title_part, late):
+        post = self._get_week(when)
+        assert title_part in post.title
+        assert post.rounds_late() == late
+
     def verify_assignments(self):
-        assert "BREAKING:" in self._get_week(datetime(2015, 4, 1)).title
-        assert "Security Breach" == self._get_week(datetime(2015, 4, 15)).title
-        assert "Javascript" in self._get_week(datetime(2015, 4, 8)).title
+        self.verify_assignment(datetime(2015, 4,  1), "BREAKING:",       0)
+        self.verify_assignment(datetime(2015, 4, 15), "Security Breach", 0)
+        self.verify_assignment(datetime(2015, 4,  8), "Javascript",      1)
         assert self._get_week(datetime(2015, 4, 22)) is None
 
     def test_tasks_function(self):
