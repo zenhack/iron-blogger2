@@ -107,7 +107,7 @@ def show_ledger():
         'ledger.html',
         bloggers=data,
         parties=parties,
-        budget='%s (%s) collected' % (format_usd(total_incurred - spent),
+        budget='%s (%s collected)' % (format_usd(total_incurred - spent),
                                       format_usd(total_paid)))
 
 
