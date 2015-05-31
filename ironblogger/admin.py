@@ -20,6 +20,16 @@ class UserView(AdminModelView):
     column_list = ('name', 'is_admin')
 
 
+class BloggerView(AdminModelView):
+
+    form_create_rules = ('name', 'start_date')
+
+class BlogView(AdminModelView):
+
+    column_list = ('blogger', 'title', 'page_url', 'feed_url')
+    form_create_rules = ('blogger', 'title', 'page_url', 'feed_url')
+
+
 class PaymentView(AdminModelView):
 
     column_formatters = {
@@ -36,5 +46,7 @@ class PartyView(AdminModelView):
 
 admin = Admin()
 admin.add_view(UserView(model.User, model.db.session))
+admin.add_view(BloggerView(model.Blogger, model.db.session))
+admin.add_view(BlogView(model.Blog, model.db.session))
 admin.add_view(PaymentView(model.Payment, model.db.session))
 admin.add_view(PartyView(model.Party, model.db.session))
