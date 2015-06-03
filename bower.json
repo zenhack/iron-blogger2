@@ -1,0 +1,10 @@
+{
+  "name": "Iron Blogger",
+  "version": "2.0.0",
+  "dependencies": {
+    "fontawesome":      "~4.3.0",
+    "bootstrap":        "~3.2.0",
+    "jquery":           "~1.11",
+    "sorts-mill-goudy":          "theleagueof/sorts-mill-goudy"
+  }
+}
