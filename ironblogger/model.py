@@ -265,7 +265,7 @@ class Post(db.Model):
         dates = db.session.query(Post.counts_for)\
             .filter(Post.counts_for != None,
                     Post.counts_for <= duedate(self.timestamp),
-                    Post.counts_for > oldest_valid_duedate,
+                    Post.counts_for >= oldest_valid_duedate,
                     Post.blog_id == Blog.id,
                     Blog.blogger_id == self.blog.blogger.id)\
             .order_by(Post.counts_for.desc())\
@@ -281,6 +281,12 @@ class Post(db.Model):
             round -= ROUND_LEN
 
     def rounds_late(self):
+        """How late is this post (in weeks)?
+
+        If the post counts for some round, return the number of weeks this post
+        is late (rounded up). If the post does not count for any round (because
+        all rounds this post *could* count for are taken), return None.
+        """
         if self.counts_for is None:
             return None
 
