@@ -29,6 +29,16 @@ same directory as `wsgi.py`.
 To initialize the database, make sure `wsgi.py` specifies the right url 
 for the database, and run `ironblogger init-db`
 
+
+## Static assets
+
+Static assets are managed via Bower (http://bower.io) and can be installed with the command `bower install`. This helps keep our standard css/js/font libraries orderly. 
+
+Bower itself can be installed with `npm install bower`
+
+
+## Starting the server
+
 Iron Blogger 2 is a [Flask][2] app. A stand-alone development server can
 be started with:
 
@@ -36,12 +46,6 @@ be started with:
 
 At which point, the application will be available at
 <http://localhost:5000>.
-
-###Static assets
-
-Static assets are managed via Bower (http://bower.io) and can be installed with the command `bower install`. This helps keep our standard css/js/font libraries orderly. 
-
-Bower itself can be installed with `npm install bower`
 
 
 The `bloggers.yml` file used by the old iron blogger software can be 
