@@ -53,6 +53,18 @@ by running:
 
 Then, `ironblogger assign-rounds` will update accounting information.
 
+## Unit Tests
+
+We use [pytest][7] for unit testing. Running the tests is simply a 
+matter of executing:
+
+    py.test
+
+It's configured to display code coverage statistics as well.
+
+New tests should be placed in a file matching `tests/test_*`; This 
+allows pytest to pick them up automatically.
+
 ## Useful tips
 
 * The command `ironblogger shell` will open a python interpreter prompt 
