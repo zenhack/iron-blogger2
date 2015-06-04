@@ -41,7 +41,7 @@ At which point, the application will be available at
 
 Static assets are managed via Bower (http://bower.io) and can be installed with the command `bower install`. This helps keep our standard css/js/font libraries orderly. 
 
-Bower itself can be installed with `npm install -g bower`
+Bower itself can be installed with `npm install bower`
 
 
 The `bloggers.yml` file used by the old iron blogger software can be 
