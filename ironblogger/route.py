@@ -41,7 +41,8 @@ def show_status():
     posts = db.session.query(Post)\
         .filter(Post.blog_id == Blog.id,
                 Blog.blogger_id == Blogger.id,
-                Post.timestamp >= Blogger.start_date).all()
+                Post.timestamp >= Blogger.start_date)\
+        .order_by(Post.timestamp.desc()).all()
     rounds = defaultdict(list)
     for post in posts:
         post_view = {
