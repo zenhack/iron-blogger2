@@ -47,7 +47,8 @@ def assign_rounds(since=None, until=None):
     posts = db.session.query(Post)\
         .filter(Post.counts_for == None,
                 Post.timestamp >= since,
-                Post.timestamp <= until).all()
+                Post.timestamp <= until)\
+        .order_by(Post.timestamp.asc()).all()
 
     for post in posts:
         post.assign_round()
