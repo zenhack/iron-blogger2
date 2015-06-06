@@ -1,14 +1,24 @@
 {% extends "layout.html" %}
 {% block content %}
-<h1>Log In</h1>
+<div class="col-md-4">
+</div>
+<div class="col-md-4">
+	<h1>Log In</h1>
 
-{% if msg %}
-<p>{{ msg }}</p>
-{% endif %}
+	{% if msg %}
+	<p>{{ msg }}</p>
+	{% endif %}
 
-<form action="{{ url_for('do_login') }}" method="post">
-	Username: <input type="text" name="username" /><br />
-	Password: <input type="password" name="password" /><br />
-	<input type="submit" value="Log in" />
-</form>
+	<form class="form" action="{{ url_for('do_login') }}" method="post">
+		<div class="form-group">
+			<label for="username">Username:</label>
+			<input class="input-sm" type="text" name="username" />
+		</div>
+		<div class="form-group">
+			<label for="username">Password:</label>
+			<input class="input-sm" type="password" name="password" /><br />
+		</div>
+		<input class="input btn-lg" type="submit" value="Log in" />
+	</form>
+</div>
 {% endblock %}
