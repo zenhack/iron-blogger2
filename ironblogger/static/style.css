@@ -5,11 +5,11 @@
 
 @font-face {
   font-family: 'Sorts Mill Goudy';
-  src: url('/bower_components/sorts-mill-goudy/webfonts/GoudyStM-webfont.eot');
-  src: url('/bower_components/sorts-mill-goudy/webfonts/GoudyStM-webfont.eot?#iefix') format('embedded-opentype'),
-       url('/bower_components/sorts-mill-goudy/webfonts/GoudyStM-webfont.woff') format('woff'),
-       url('/bower_components/sorts-mill-goudy/webfonts/GoudyStM-webfont.ttf') format('truetype'),
-       url('/bower_components/sorts-mill-goudy/webfonts/GoudyStM-webfont.svg#fanwood') format('svg');
+  src: url('/static/bower_components/sorts-mill-goudy/webfonts/GoudyStM-webfont.eot');
+  src: url('/static/bower_components/sorts-mill-goudy/webfonts/GoudyStM-webfont.eot?#iefix') format('embedded-opentype'),
+       url('/static/bower_components/sorts-mill-goudy/webfonts/GoudyStM-webfont.woff') format('woff'),
+       url('/static/bower_components/sorts-mill-goudy/webfonts/GoudyStM-webfont.ttf') format('truetype'),
+       url('/static/bower_components/sorts-mill-goudy/webfonts/GoudyStM-webfont.svg#fanwood') format('svg');
   font-weight: normal;
   font-style: normal;
 }
