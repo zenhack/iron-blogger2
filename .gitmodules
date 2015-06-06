@@ -1,0 +1,12 @@
+[submodule "ironblogger/static/bower_components/bootstrap"]
+	path = ironblogger/static/bower_components/bootstrap
+	url = git://github.com/twbs/bootstrap
+[submodule "ironblogger/static/bower_components/fontawesome"]
+	path = ironblogger/static/bower_components/fontawesome
+	url = git://github.com/FortAwesome/Font-Awesome
+[submodule "ironblogger/static/bower_components/jquery"]
+	path = ironblogger/static/bower_components/jquery
+	url = git://github.com/jquery/jquery
+[submodule "ironblogger/static/bower_components/sorts-mill-goudy"]
+	path = ironblogger/static/bower_components/sorts-mill-goudy
+	url = git://github.com/theleagueof/sorts-mill-goudy

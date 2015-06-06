@@ -9,5 +9,3 @@ bloggers.yml
 __pycache__
 *.swp
 .coverage
-ironblogger/static/bower_components
-node_modules
