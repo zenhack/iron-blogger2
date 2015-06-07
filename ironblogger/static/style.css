@@ -80,3 +80,16 @@ section {
   border-bottom:1px solid #eee;
   overflow:hidden;
 }
+
+form.login {
+  text-align:center;
+}
+
+#footer {
+  color:#aaa;
+  border-top:1px solid #eee;
+  margin-top:40px;
+  padding-top:40px;
+  padding-bottom:40px;
+  text-align:center;
+}
