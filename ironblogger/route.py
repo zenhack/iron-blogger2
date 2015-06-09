@@ -31,11 +31,6 @@ def render_template(*args, **kwargs):
     return flask.render_template(*args, **kwargs)
 
 
-@app.route('/')
-def show_index():
-    return render_template('index.html')
-
-
 @app.route('/status')
 def show_status():
 
@@ -145,10 +140,10 @@ def show_bloggers():
                            bloggers=db.session.query(Blogger).all())
 
 
-@app.route('/all-posts/rss')
-def show_all_posts_rss():
+@app.route('/rss')
+def show_rss():
     posts = db.session.query(Post).order_by(Post.timestamp.desc())
-    resp = make_response(render_template('all-posts-rss.xml', posts=posts), 200)
+    resp = make_response(render_template('rss.xml', posts=posts), 200)
     resp.headers['Content-Type'] = 'application/rss+xml'
     return resp
 
@@ -206,14 +201,27 @@ def _page_filter(query, page):
     return query.offset(page['num'] * page['size']).limit(page['size'])
 
 
-@app.route('/all-posts')
-def show_all_posts():
+@app.route('/posts')
+def show_posts():
     post_count = db.session.query(Post).count()
     pageinfo = _page_args(item_count=post_count)
     posts = db.session.query(Post)\
         .order_by(Post.timestamp.desc())
     posts = _page_filter(posts, pageinfo).all()
-    return render_template('all-posts.html',
+    return render_template('posts.html',
+                           pageinfo=pageinfo,
+                           posts=posts,
+                           rssdate=rssdate)
+
+
+@app.route('/')
+def show_index():
+    post_count = db.session.query(Post).count()
+    pageinfo = _page_args(item_count=post_count)
+    posts = db.session.query(Post)\
+        .order_by(Post.timestamp.desc())
+    posts = _page_filter(posts, pageinfo).all()
+    return render_template('index.html',
                            pageinfo=pageinfo,
                            posts=posts,
                            rssdate=rssdate)

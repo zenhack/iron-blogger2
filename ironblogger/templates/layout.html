@@ -26,11 +26,10 @@
 					{% set targ, text, method = ('do_logout', 'Log Out', 'post') %}
 					{% endif %}
 					<ul class="nav nav-justified">
-						<li><a href="{{ url_for('show_all_posts') }}">Posts</a></li>
 						<li><a href="{{ url_for('show_bloggers') }}">Bloggers</a></li>
 						<li><a href="{{ url_for('show_status') }}">Status</a></li>
 						<li><a href="{{ url_for('show_ledger') }}">Ledger</a></li>
-						<li><a href="{{ url_for('show_all_posts_rss') }}">RSS</a></li>
+						<li><a href="{{ url_for('show_rss') }}">RSS</a></li>
 						<li><form action="{{ url_for(targ) }}" method="{{ method }}">
 							<input class="btn" type="submit" value="{{ text }}" />
 						</form></li>

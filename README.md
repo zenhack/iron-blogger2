@@ -32,10 +32,7 @@ for the database, and run `ironblogger init-db`
 
 ## Static assets
 
-Static assets are managed via Bower (http://bower.io) and can be installed with the command `bower install`. This helps keep our standard css/js/font libraries orderly. 
-
-Bower itself can be installed with `npm install bower`
-
+Static assets have been submoduled and are kept in `ironblogger/static/bower_components`, which used to be managed by Bower, which is why it has that name.  
 
 ## Starting the server
 

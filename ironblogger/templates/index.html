@@ -1,3 +1,14 @@
+{% import "page.html" as page %}
 {% extends "layout.html" %}
 {% block content %}
+{% for post in posts %}
+<section class="post">
+	<h2 class="ib-title"><a href="{{ post.page_url }}">{{ post.title }}</a></h2>
+        <p class="meta">{{ post.timestamp }} by {{ post.blog.blogger.name}} via <a href="{{ post.blog.page_url }}">{{ post.blog.title }}</a></p> 
+	<section>
+		{{ post.summary | safe }}
+	</section>
+</section>
+{% endfor %}
+{{ page.nav('show_posts', pageinfo) }}
 {% endblock %}
