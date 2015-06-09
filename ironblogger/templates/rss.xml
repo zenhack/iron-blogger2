@@ -2,7 +2,7 @@
 <rss version="2.0">
 	<channel>
 		<title>Iron Blogger {{ cfg['region'] }}</title>
-		<link>{{ url_for('index', _external=True) }}</link>
+		<link>{{ url_for('show_index', _external=True) }}</link>
 		<description>Iron Blogger {{ cfg['region'] }} Aggregated Feed</description>
 		<language>{{ cfg['language'] }}</language>
 		{% for post in posts %}
