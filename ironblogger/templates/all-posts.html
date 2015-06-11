@@ -10,10 +10,10 @@
 </section>
 {% endfor %}
 <ul class="nav nav-justified">
-	{% if page > 0 %}
+	{% if not is_first_page %}
 	<li><a href="{{ url_for('show_all_posts') }}?page={{ page - 1 }}&page_size={{ page_size }}">prev</a></li>
 	{% endif %}
-	{% if (page + 1) * page_size < total_post_count %}
+	{% if not is_last_page %}
 	<li><a href="{{ url_for('show_all_posts') }}?page={{ page + 1 }}&page_size={{ page_size }}">next</a></li>
 	{% endif %}
 </ul>

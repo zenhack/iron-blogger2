@@ -151,8 +151,9 @@ def show_all_posts():
     return render_template('all-posts.html',
                            page=page_num,
                            page_size=page_size,
-                           total_post_count=post_count,
                            posts=posts,
+                           is_first_page=(page_num == 0),
+                           is_last_page=(page_num + 1) * page_size > post_count,
                            rssdate=rssdate)
 
 
