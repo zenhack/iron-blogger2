@@ -128,8 +128,32 @@ def show_all_posts_rss():
 
 @app.route('/all-posts')
 def show_all_posts():
-    posts = db.session.query(Post).order_by(Post.timestamp.desc())
-    return render_template('all-posts.html', posts=posts, rssdate=rssdate)
+    post_count = db.session.query(Post).count()
+    try:
+        page_num = int(request.args.get('page', '0'))
+        page_size = int(request.args.get('page_size', '50'))
+    except ValueError:
+        # arguments weren't integers
+        flask.abort(400)
+    if page_num < 0 or page_size < 1:
+        # Illegal arguments; can't have a zero-sized page or
+        # page before page 1
+        flask.abort(404)
+    if page_num * page_size > post_count and post_count > 0:
+        # We don't have this many pages. We need to special case
+        # post_count == 0, or this page would just always error
+        # at us, but otherwise we want to complain.
+        flask.abort(404)
+    posts = db.session.query(Post)\
+        .order_by(Post.timestamp.desc())\
+        .offset(page_num * page_size)\
+        .limit(page_size).all()
+    return render_template('all-posts.html',
+                           page=page_num,
+                           page_size=page_size,
+                           total_post_count=post_count,
+                           posts=posts,
+                           rssdate=rssdate)
 
 
 @app.route('/login', methods=['POST'])
