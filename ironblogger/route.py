@@ -126,34 +126,72 @@ def show_all_posts_rss():
     return resp
 
 
-@app.route('/all-posts')
-def show_all_posts():
-    post_count = db.session.query(Post).count()
+def _page_args(item_count, num=0, size=50):
+    """Extract pagination from the query string
+
+    This should be called from a function which display paginated data.
+    ``item_count`` should be the total number of items in the paginated
+    data. ``num`` and ``size`` are the default page number and page size,
+    respectively. These are used if the client does not specify a value.
+
+    If the client provides invalid arguments or requests a page which does not
+    exist, ``_parse_args`` will abort the request handler, and return a 400 or
+    404 status to the client.
+
+    The return value is a dictionary with the following contents:
+
+        'num'  - The page number
+        'size' - The number of items on a page
+        'is_first' - True iff this is the first page of the data
+        'is_last': - True iff this is the last page of the data
+    """
     try:
-        page_num = int(request.args.get('page', '0'))
-        page_size = int(request.args.get('page_size', '50'))
+        num = int(request.args.get('page', num))
+        size = int(request.args.get('page_size', size))
     except ValueError:
         # arguments weren't integers
         flask.abort(400)
-    if page_num < 0 or page_size < 1:
+    if num < 0 or size < 1:
         # Illegal arguments; can't have a zero-sized page or
         # page before page 1
         flask.abort(404)
-    if page_num * page_size > post_count and post_count > 0:
+    if num * size > item_count and item_count > 0:
         # We don't have this many pages. We need to special case
         # post_count == 0, or this page would just always error
         # at us, but otherwise we want to complain.
         flask.abort(404)
+    return {
+        'num': num,
+        'size': size,
+        'is_first': num == 0,
+        'is_last': (num + 1) * size > item_count,
+    }
+
+
+def _page_filter(query, page):
+    """Restrict a SQLAlchemy query to the page specified by ``page``
+
+    ``query`` should be the query to filter.
+    ``page`` should be a dictionary as returned by ``_page_args``.
+
+    Returns a new query with the additional constraints
+    """
+    return query.offset(page['num'] * page['size']).limit(page['size'])
+
+
+@app.route('/all-posts')
+def show_all_posts():
+    post_count = db.session.query(Post).count()
+    page = _page_args(item_count=post_count)
     posts = db.session.query(Post)\
-        .order_by(Post.timestamp.desc())\
-        .offset(page_num * page_size)\
-        .limit(page_size).all()
+        .order_by(Post.timestamp.desc())
+    posts = _page_filter(posts, page).all()
     return render_template('all-posts.html',
-                           page=page_num,
-                           page_size=page_size,
+                           page=page['num'],
+                           page_size=page['size'],
                            posts=posts,
-                           is_first_page=(page_num == 0),
-                           is_last_page=(page_num + 1) * page_size > post_count,
+                           is_first_page=page['is_first'],
+                           is_last_page=page['is_last'],
                            rssdate=rssdate)
 
 
