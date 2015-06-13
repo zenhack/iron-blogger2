@@ -1,3 +1,4 @@
+{% import "page.html" as page %}
 {% extends "layout.html" %}
 {% block content %}
 {% for post in posts %}
@@ -9,12 +10,5 @@
 	</section>
 </section>
 {% endfor %}
-<ul class="nav nav-justified">
-	{% if not pageinfo['is_first'] %}
-	<li><a href="{{ url_for('show_all_posts', page=pageinfo['num'] - 1, page_size=pageinfo['size']) }}">prev</a></li>
-	{% endif %}
-	{% if not pageinfo['is_last'] %}
-	<li><a href="{{ url_for('show_all_posts', page=pageinfo['num'] + 1, page_size=pageinfo['size']) }}">next</a></li>
-	{% endif %}
-</ul>
+{{ page.nav('show_all_posts', pageinfo) }}
 {% endblock %}

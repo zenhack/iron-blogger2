@@ -1,0 +1,10 @@
+{% macro nav(here, pageinfo) %}
+<ul class="nav nav-justified">
+	{% if not pageinfo['is_first'] %}
+	<li><a href="{{ url_for(here, page=pageinfo['num'] - 1, page_size=pageinfo['size']) }}">prev</a></li>
+	{% endif %}
+	{% if not pageinfo['is_last'] %}
+	<li><a href="{{ url_for(here, page=pageinfo['num'] + 1, page_size=pageinfo['size']) }}">next</a></li>
+	{% endif %}
+</ul>
+{% endmacro %}
