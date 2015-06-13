@@ -182,16 +182,13 @@ def _page_filter(query, page):
 @app.route('/all-posts')
 def show_all_posts():
     post_count = db.session.query(Post).count()
-    page = _page_args(item_count=post_count)
+    pageinfo = _page_args(item_count=post_count)
     posts = db.session.query(Post)\
         .order_by(Post.timestamp.desc())
-    posts = _page_filter(posts, page).all()
+    posts = _page_filter(posts, pageinfo).all()
     return render_template('all-posts.html',
-                           page=page['num'],
-                           page_size=page['size'],
+                           pageinfo=pageinfo,
                            posts=posts,
-                           is_first_page=page['is_first'],
-                           is_last_page=page['is_last'],
                            rssdate=rssdate)
 
 
