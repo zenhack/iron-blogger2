@@ -1,3 +1,4 @@
+{% import "page.html" as page %}
 {% extends "layout.html" %}
 {% block content %}
 
@@ -30,4 +31,5 @@
 	{% endfor %}
 </table>
 {% endfor %}
+{{ page.nav('show_status', pageinfo) }}
 {% endblock %}

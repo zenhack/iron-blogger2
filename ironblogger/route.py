@@ -38,11 +38,26 @@ def show_index():
 
 @app.route('/status')
 def show_status():
+
+    first_round = db.session.query(Blogger.start_date)\
+        .order_by(Blogger.start_date.asc()).first()
+    current_round = duedate(datetime.now())
+    if first_round is None:
+        num_rounds = 0
+    else:
+        first_round = first_round[0]  # SQLAlchemy returns a tuple of the rows
+        num_rounds = divide_timedelta(current_round - first_round, ROUND_LEN)
+    pageinfo = _page_args(item_count=num_rounds, size=5)
+    start_round = current_round - (ROUND_LEN * pageinfo['size'] * pageinfo['num'])
+    stop_round  = start_round - (ROUND_LEN * pageinfo['size'])
+
     posts = db.session.query(Post)\
         .filter(Post.blog_id == Blog.id,
                 Blog.blogger_id == Blogger.id,
-                Post.timestamp >= Blogger.start_date)\
-        .order_by(Post.timestamp.desc()).all()
+                Post.timestamp >= Blogger.start_date,
+                Post.counts_for <= start_round,
+                Post.counts_for > stop_round)\
+        .order_by(Post.timestamp.desc())
     rounds = defaultdict(list)
     for post in posts:
         post_view = {
@@ -59,7 +74,8 @@ def show_status():
         if post_view['counts_for'] is not None and post_view['late?']:
             rounds[post.counts_for].append(post_view)
     return render_template('status.html',
-                           rounds=sorted(rounds.iteritems(), reverse=True))
+                           rounds=sorted(rounds.iteritems(), reverse=True),
+                           pageinfo=pageinfo)
 
 
 @app.route('/ledger')
