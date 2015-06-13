@@ -11,10 +11,10 @@
 {% endfor %}
 <ul class="nav nav-justified">
 	{% if not is_first_page %}
-	<li><a href="{{ url_for('show_all_posts') }}?page={{ page - 1 }}&page_size={{ page_size }}">prev</a></li>
+	<li><a href="{{ url_for('show_all_posts', page=page - 1, page_size=page_size) }}">prev</a></li>
 	{% endif %}
 	{% if not is_last_page %}
-	<li><a href="{{ url_for('show_all_posts') }}?page={{ page + 1 }}&page_size={{ page_size }}">next</a></li>
+	<li><a href="{{ url_for('show_all_posts', page=page + 1, page_size=page_size) }}">next</a></li>
 	{% endif %}
 </ul>
 {% endblock %}
