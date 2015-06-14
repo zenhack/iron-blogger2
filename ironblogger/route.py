@@ -216,7 +216,7 @@ def show_posts():
 
 @app.route('/')
 def show_index():
-    return show_posts()
+    return flask.redirect(url_for('show_posts'))
 
 
 @app.route('/login', methods=['POST'])
