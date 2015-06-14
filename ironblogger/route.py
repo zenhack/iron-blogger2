@@ -216,15 +216,7 @@ def show_posts():
 
 @app.route('/')
 def show_index():
-    post_count = db.session.query(Post).count()
-    pageinfo = _page_args(item_count=post_count)
-    posts = db.session.query(Post)\
-        .order_by(Post.timestamp.desc())
-    posts = _page_filter(posts, pageinfo).all()
-    return render_template('index.html',
-                           pageinfo=pageinfo,
-                           posts=posts,
-                           rssdate=rssdate)
+    return show_posts()
 
 
 @app.route('/login', methods=['POST'])

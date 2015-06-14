@@ -26,6 +26,7 @@
 					{% set targ, text, method = ('do_logout', 'Log Out', 'post') %}
 					{% endif %}
 					<ul class="nav nav-justified">
+						<li><a href="{{ url_for('show_posts') }}">Posts</a></li>
 						<li><a href="{{ url_for('show_bloggers') }}">Bloggers</a></li>
 						<li><a href="{{ url_for('show_status') }}">Status</a></li>
 						<li><a href="{{ url_for('show_ledger') }}">Ledger</a></li>
