@@ -31,11 +31,7 @@
 	{% endfor %}
 </table>
 	<h3>Missing in action:</h3>
-	<ul>
-		{% for blogger in round['no-post'] %}
-		<li>{{ blogger }}</li>
-		{% endfor %}
-	</ul>
+	<p>{{ ', '.join(round['no-post']) }}</p>
 {% endfor %}
 {{ page.nav('show_status', pageinfo) }}
 {% endblock %}
