@@ -2,8 +2,8 @@
 {% extends "layout.html" %}
 {% block content %}
 
-{% for round, posts in rounds %}
-<h2>Round ending {{ round }}</h2>
+{% for duedate, round in rounds %}
+<h2>Round ending {{ duedate }}</h2>
 
 <table class="table">
 	<tr>
@@ -12,7 +12,7 @@
 		<th>Blog</th>
 		<th>Date</th>
 	</tr>
-	{% for post in posts %}
+	{% for post in round['posts'] %}
 	<tr>
 		<td>{{ post['author'] }}</td>
 		<td><a href="{{ post.page_url }}">{{ post.title }}</a></td>
@@ -21,7 +21,7 @@
 			{{ post['timestamp'] }}
 			{% if post['counts_for'] == None %}
 			(Bonus!)
-			{% elif post['counts_for'] < round %}
+			{% elif post['counts_for'] < duedate %}
 			(Late, counts for {{ post['counts_for'] }})
 			{% elif post['late?'] %}
 			(Late)
@@ -30,6 +30,12 @@
 	</tr>
 	{% endfor %}
 </table>
+	<h3>Missing in action:</h3>
+	<ul>
+		{% for blogger in round['no-post'] %}
+		<li>{{ blogger }}</li>
+		{% endfor %}
+	</ul>
 {% endfor %}
 {{ page.nav('show_status', pageinfo) }}
 {% endblock %}

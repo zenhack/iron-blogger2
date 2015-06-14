@@ -51,6 +51,9 @@ def show_status():
     start_round = current_round - (ROUND_LEN * pageinfo['size'] * pageinfo['num'])
     stop_round  = start_round - (ROUND_LEN * pageinfo['size'])
 
+    all_bloggers = set([row [0]
+                        for row in db.session.query(Blogger.name).all()])
+
     posts = db.session.query(Post)\
         .filter(Post.blog_id == Blog.id,
                 Blog.blogger_id == Blogger.id,
@@ -58,7 +61,10 @@ def show_status():
                 Post.counts_for <= start_round,
                 Post.counts_for > stop_round)\
         .order_by(Post.timestamp.desc())
-    rounds = defaultdict(list)
+    rounds = defaultdict(lambda: {
+        'posts': [],
+        'no-post': set(all_bloggers),
+    })
     for post in posts:
         post_view = {
             'title': post.title,
@@ -70,9 +76,14 @@ def show_status():
             'counts_for': post.counts_for,
             'late?'     : duedate(post.timestamp) != post.counts_for,
         }
-        rounds[duedate(post.timestamp)].append(post_view)
+        def _add_post(date):
+            rounds[date]['posts'].append(post_view)
+            rounds[date]['no-post'] -= set([post_view['author']])
+        _add_post(duedate(post.timestamp))
         if post_view['counts_for'] is not None and post_view['late?']:
-            rounds[post.counts_for].append(post_view)
+            _add_post(post.counts_for)
+    for k in rounds.keys():
+        rounds[k]['no-post'] = sorted(rounds[k]['no-post'])
     return render_template('status.html',
                            rounds=sorted(rounds.iteritems(), reverse=True),
                            pageinfo=pageinfo)
