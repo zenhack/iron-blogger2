@@ -19,11 +19,11 @@ from ironblogger.app import app
 
 commands = {
     'init-db': (
-        init_db,
+        lambda args: init_db(),
         "Initialize the database."
     ),
     'import': (
-        lambda: import_bloggers(sys.stdin),
+        lambda args: import_bloggers(sys.stdin),
         "Import bloggers from yaml file."
     ),
     'serve': (
@@ -31,25 +31,27 @@ commands = {
         "Start the app server (in debug mode)."
     ),
     'shell': (
-        shell,
+        lambda args: shell(),
         "Start a python shell inside the app context."
     ),
     'sync-posts': (
-        sync_posts,
+        lambda args: sync_posts(),
         "Syncronize posts with blogs."
     ),
     'assign-rounds': (
-        assign_rounds,
+        lambda args: assign_rounds(),
         "Assign posts to rounds."
     ),
 }
+subs = {}
 
 parser = argparse.ArgumentParser()
 subparsers = parser.add_subparsers(dest='command')
 
 for command_name in commands.keys():
-    subparsers.add_parser(command_name, help=commands[command_name][1])
+    subs[command_name] = subparsers.add_parser(command_name,
+                                               help=commands[command_name][1])
 
 def main():
     args = parser.parse_args()
-    with_context(commands[args.command][0])
+    with_context(commands[args.command][0], args)

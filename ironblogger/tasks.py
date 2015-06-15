@@ -21,9 +21,9 @@ from alembic.config import Config
 from alembic import command
 
 
-def with_context(task):
+def with_context(task, *args, **kwargs):
     with app.test_request_context():
-        task()
+        task(*args, **kwargs)
 
 
 def init_db():
