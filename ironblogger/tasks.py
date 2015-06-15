@@ -15,7 +15,7 @@ from os import path
 
 import ironblogger
 from ironblogger.app import app
-from ironblogger.model import Blogger, Blog, Post, MalformedPostError, db, ROUND_LEN
+from ironblogger.model import Blogger, Blog, Post, MalformedPostError, db
 
 from alembic.config import Config
 from alembic import command
