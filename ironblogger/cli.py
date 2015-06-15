@@ -13,46 +13,43 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>
 
-import sys
-
+import argparse
 from ironblogger.tasks import *
 from ironblogger.app import app
 
+commands = {
+    'init-db': (
+        init_db,
+        "Initialize the database."
+    ),
+    'import': (
+        lambda: import_bloggers(sys.stdin),
+        "Import bloggers from yaml file."
+    ),
+    'serve': (
+        lambda: app.run(debug=True),
+        "Start the app server (in debug mode)."
+    ),
+    'shell': (
+        shell,
+        "Start a python shell inside the app context."
+    ),
+    'sync-posts': (
+        sync_posts,
+        "Syncronize posts with blogs."
+    ),
+    'assign-rounds': (
+        assign_rounds,
+        "Assign posts to rounds."
+    ),
+}
 
-def usage(exit_status=1):
-    usage = '\n'.join([
-        "Usage:",
-        "",
-        "    ironblogger init-db        # initialize the database.",
-        "    ironblogger import         # import bloggers from yaml file.",
-        "    ironblogger serve          # start the app server (in debug mode).",
-        "    ironblogger shell          # start a python shell inside the app context.",
-        "    ironblogger sync-posts     # syncronize posts with blogs.",
-        "    ironblogger assign-rounds  # assign posts to rounds.",
-        "    ironblogger help           # show this help message.",
-        "    ironblogger help <command> # show detailed help for <command>.",
-    ])
-    print(usage)
-    sys.exit(exit_status)
+parser = argparse.ArgumentParser()
+subparsers = parser.add_subparsers(dest='command')
 
-
-def show_help(*args):
-    if len(args) == 0:
-        usage(0)
-    else:
-        print("command help not yet implemented")
-
+for command_name in commands.keys():
+    subparsers.add_parser(command_name, help=commands[command_name][1])
 
 def main():
-    if len(sys.argv) < 2:
-        usage()
-    commands = {
-        'help': lambda: show_help(*sys.argv[2:]),
-        'init-db': init_db,
-        'import': lambda: import_bloggers(sys.stdin),
-        'serve': lambda: app.run(debug=True),
-        'shell': shell,
-        'sync-posts': sync_posts,
-        'assign-rounds': assign_rounds,
-    }
-    with_context(commands[sys.argv[1]])
+    args = parser.parse_args()
+    with_context(commands[args.command][0])
