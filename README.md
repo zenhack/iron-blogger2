@@ -7,6 +7,12 @@ Much more work is needed. Patches welcome!
 
 # Setting Up a Development Environment
 
+###Prerequisites
+
+For Debian/Ubuntu users, you may need to run sudo `apt-get install libxml2-dev libxslt1-dev`
+
+###virtualenv
+
 Use of [virtualenv][1] is recommended for development. In this 
 directory, execute:
 
