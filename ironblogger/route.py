@@ -219,6 +219,11 @@ def show_index():
     return flask.redirect(url_for('show_posts'))
 
 
+@app.route('/about')
+def show_about():
+    return render_template('about.html')
+
+
 @app.route('/login', methods=['POST'])
 def do_login():
     user = load_user(request.form['username'])

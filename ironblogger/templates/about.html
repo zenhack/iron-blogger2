@@ -1,0 +1,144 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<h1>About Iron Blogger</h1>
+
+<p>Iron Blogger is a friendly little game people use to get themselves to blog
+more. The software that runs this website is free and open source; you can get
+the code <a href="https://github.com/zenhack/iron-blogger2">here</a>.</p>
+
+<h2>Rules: Summary</h2>
+
+<ul>
+	<li>Post once a week.</li>
+	<li>If you don't turn in a post, you owe $5.</li>
+	<li>If you turn in a post late, you owe $1 for each week that it's late
+		(max $5)</li>
+	<li>You can't owe more than $30.</li>
+	<li>We'll spend the mony on parties for everyone! afterwards, all the
+		accounting resets.</li>
+</ul>
+
+<h2>Pedantic Details</h2>
+
+<ul>
+	<li>Each participant is expected to publish one blog post per week.</li>
+	<li>If a participant misses a post, they owe $5.00 for that post.</li>
+	<li>If a participant posts more than once in a given week, subsequent posts
+		will reduce the debt incurred by any posts the participant had previously
+		missed.</li>
+	<li>We will periodically have parties funded from the debt people incurr.
+		After the party (and once debts have been paid), the accounting resets.</li>
+	<li>No participant shall owe more than $30.00 per party.</li>
+</ul>
+
+<p>Regarding the last bullet point: When a participant publishes an extra post, it
+counts as the most recent post that the participant has missed. Rather than
+owing $5.00 for that post, the participant will owe $N, where the post is N
+weeks (rounded up) late, provided N is less than 5.</p>
+
+<p>As an example, if during a seven week period, Alice does not post for the
+first six weeks, and then starts posting, the following table shows the details
+of how much she owes and for what (based on how many times she posts in week
+seven).</p>
+
+<table class="table">
+	<tr>
+		<th>Week 1</th>
+		<th>Week 2</th>
+		<th>Week 3</th>
+		<th>Week 4</th>
+		<th>Week 5</th>
+		<th>Week 6</th>
+		<th>Week 7 (current)</th>
+		<th>Posts in week 7</th>
+		<th>Owed</th>
+	</tr>
+	<tr>
+		<td>No post: $5</td>
+		<td>No post: $5</td>
+		<td>No post: $5</td>
+		<td>No post: $5</td>
+		<td>No post: $5</td>
+		<td>No post: $5</td>
+		<td>No post: $5</td>
+		<td>0</td>
+		<td>$30</td>
+	</tr>
+	<tr>
+		<td>No post: $5</td>
+		<td>No post: $5</td>
+		<td>No post: $5</td>
+		<td>No post: $5</td>
+		<td>No post: $5</td>
+		<td>No post: $5</td>
+		<td>On time post: $0</td>
+		<td>1</td>
+		<td>$30</td>
+	</tr>
+	<tr>
+		<td>No post: $5</td>
+		<td>No post: $5</td>
+		<td>No post: $5</td>
+		<td>No post: $5</td>
+		<td>No post: $5</td>
+		<td>Late post: $1</td>
+		<td>On time post: $0</td>
+		<td>2</td>
+		<td>$26</td>
+	</tr>
+	<tr>
+		<td>No post: $5</td>
+		<td>No post: $5</td>
+		<td>No post: $5</td>
+		<td>No post: $5</td>
+		<td>Late post: $2</td>
+		<td>Late post: $1</td>
+		<td>On time post: $0</td>
+		<td>3</td>
+		<td>$23</td>
+	</tr>
+	<tr>
+		<td>No post: $5</td>
+		<td>No post: $5</td>
+		<td>No post: $5</td>
+		<td>Late post: $3</td>
+		<td>Late post: $2</td>
+		<td>Late post: $1</td>
+		<td>On time post: $0</td>
+		<td>4</td>
+		<td>$21</td>
+	</tr>
+	<tr>
+		<td>No post: $5</td>
+		<td>No post: $5</td>
+		<td>Late post: $4</td>
+		<td>Late post: $3</td>
+		<td>Late post: $2</td>
+		<td>Late post: $1</td>
+		<td>On time post: $0</td>
+		<td>5</td>
+		<td>$20</td>
+	</tr>
+	<tr>
+		<td>No post: $5</td>
+		<td>Late post: $5</td>
+		<td>Late post: $4</td>
+		<td>Late post: $3</td>
+		<td>Late post: $2</td>
+		<td>Late post: $1</td>
+		<td>On time post: $0</td>
+		<td>6</td>
+		<td>$20</td>
+	</tr>
+</table>
+
+<p>Note that:</p>
+
+<ul>
+	<li>In the first row, Alice only owes $30, not $35, even though
+		7 posts * $5 = $35; the debt cap prevents her from exceeding $30.</li>
+	<li>In the last row, Alice turns a post in for week 2, but it is so late that
+		she doesn't get any credit.</li>
+</ul>
+{% endblock %}
