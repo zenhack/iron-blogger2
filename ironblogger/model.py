@@ -96,7 +96,10 @@ class Blog(db.Model):
     modified   = db.Column(db.String)  # We don't bother parsing this; it's only for the server's
                                        # Benefit.
 
-    blogger = db.relationship('Blogger', backref=db.backref('blogs'))
+    blogger = db.relationship(
+        'Blogger',
+        backref=db.backref('blogs', cascade='all, delete-orphan')
+    )
 
     def sync_posts(self):
         logging.info('Syncing posts for blog %r by %r',
@@ -163,7 +166,10 @@ class Payment(db.Model):
                                                         # Internationalization
                                                         # is still TODO.
 
-    blogger = db.relationship('Blogger', backref=db.backref('payments'))
+    blogger = db.relationship(
+        'Blogger',
+        backref=db.backref('payments', cascade='all, delete-orphan')
+    )
 
 
 class Post(db.Model):
@@ -178,7 +184,10 @@ class Post(db.Model):
     summary    = db.Column(db.Text,     nullable=False)
     page_url   = db.Column(db.String,   nullable=False)
 
-    blog  = db.relationship('Blog',  backref=db.backref('posts'))
+    blog  = db.relationship(
+        'Blog',
+        backref=db.backref('posts', cascade='all, delete-orphan')
+    )
 
     @staticmethod
     def _get_pub_date(feed_entry):
