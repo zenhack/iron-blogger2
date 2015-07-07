@@ -28,6 +28,8 @@ from datetime import datetime
 
 def render_template(*args, **kwargs):
     kwargs['cfg'] = config.cfg
+    kwargs['format_usd'] = format_usd
+    kwargs['rssdate'] = rssdate
     return flask.render_template(*args, **kwargs)
 
 
@@ -114,9 +116,9 @@ def show_ledger():
             paid += payment.amount
         data.append({
             'name': blogger.name,
-            'incurred': format_usd(incurred),
-            'paid': format_usd(paid),
-            'owed': format_usd(incurred - paid),
+            'incurred': incurred,
+            'paid': paid,
+            'owed': incurred - paid,
         })
         total_paid += paid
         total_incurred += incurred
@@ -124,14 +126,14 @@ def show_ledger():
     spent = 0
     for party in parties:
         spent += party.spent
-    parties = [{'date': party.date, 'spent': format_usd(party.spent)}
+    parties = [{'date': party.date, 'spent': party.spent}
                for party in parties]
     return render_template(
         'ledger.html',
         bloggers=data,
         parties=parties,
-        budget='%s (%s collected)' % (format_usd(total_incurred - spent),
-                                      format_usd(total_paid)))
+        budget=total_incurred - spent,
+        collected = total_paid)
 
 
 @app.route('/bloggers')
@@ -210,8 +212,7 @@ def show_posts():
     posts = _page_filter(posts, pageinfo).all()
     return render_template('posts.html',
                            pageinfo=pageinfo,
-                           posts=posts,
-                           rssdate=rssdate)
+                           posts=posts)
 
 
 @app.route('/')
