@@ -92,16 +92,17 @@ def show_ledger():
     total_paid = 0
     total_incurred = 0
     for blogger in bloggers:
+        first_duedate = duedate(blogger.start_date)
+        current_duedate = duedate(now)
         posts = db.session.query(Post)\
             .filter(Post.counts_for != None,
-                    Post.counts_for >= blogger.start_date,
-                    Post.counts_for < duedate(now),
+                    Post.counts_for >= first_duedate,
+                    Post.counts_for < current_duedate,
                     Post.blog_id == Blog.id,
                     Blog.blogger_id == blogger.id)\
             .order_by(Post.counts_for.desc()).all()
-        num_rounds = divide_timedelta(
-            duedate(now) - duedate(blogger.start_date),
-            ROUND_LEN)
+        num_rounds = divide_timedelta(current_duedate - first_duedate,
+                                      ROUND_LEN)
         missed = num_rounds - len(posts)
         incurred = DEBT_PER_POST * missed
         for post in posts:
