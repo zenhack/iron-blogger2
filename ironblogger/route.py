@@ -103,7 +103,6 @@ def show_ledger():
             duedate(now) - duedate(blogger.start_date),
             ROUND_LEN)
         missed = num_rounds - len(posts)
-        print('%s missed %d posts.' % (blogger.name, missed))
         incurred = DEBT_PER_POST * missed
         for post in posts:
             incurred += post.rounds_late() * LATE_PENALTY
