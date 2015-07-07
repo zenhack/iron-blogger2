@@ -100,7 +100,7 @@ def show_ledger():
                     Blog.blogger_id == blogger.id)\
             .order_by(Post.counts_for.desc()).all()
         num_rounds = divide_timedelta(
-            duedate(now - ROUND_LEN) - duedate(blogger.start_date),
+            duedate(now) - duedate(blogger.start_date),
             ROUND_LEN)
         missed = num_rounds - len(posts)
         print('%s missed %d posts.' % (blogger.name, missed))
