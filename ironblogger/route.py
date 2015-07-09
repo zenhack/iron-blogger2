@@ -90,7 +90,7 @@ def show_status():
 def show_ledger():
     data = []
     now = datetime.now()
-    bloggers = db.session.query(Blogger).all()
+    bloggers = db.session.query(Blogger).order_by(Blogger.name).all()
     total_paid = 0
     total_incurred = 0
     for blogger in bloggers:
@@ -139,7 +139,7 @@ def show_ledger():
 @app.route('/bloggers')
 def show_bloggers():
     return render_template('bloggers.html',
-                           bloggers=db.session.query(Blogger).all())
+                           bloggers=db.session.query(Blogger).order_by(Blogger.name).all())
 
 
 @app.route('/rss')
