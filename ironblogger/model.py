@@ -77,8 +77,18 @@ class User(db.Model, UserMixin):
 class Blogger(db.Model):
     """An Iron Blogger participant."""
     id         = db.Column(db.Integer,  primary_key=True)
+    # It would be nice to disambiguate "name" from "real_name" by calling it
+    # "display_name" or something, but that's TODO since SQLite doesn't provide
+    # a straightforward way to rename columns, and so writing a migration script
+    # will take a bit of work.
     name       = db.Column(db.String,   nullable=False, unique=True)
     start_date = db.Column(db.DateTime, nullable=False)
+
+    # These aren't currently really used by anything (and aren't displayed
+    # publicly), but useful for an administrator to keep track of who people are when it comes time to
+    # collect debts:
+    real_name = db.Column(db.String)
+    email     = db.Column(db.String)
 
     def __repr__(self):
         return self.name
