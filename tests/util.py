@@ -6,7 +6,7 @@ from ironblogger.model import db
 def fresh_context():
     setup({
         'region': 'Boston',
-        'timezone': '-0500',
+        'timezone': 'US/Eastern',
         'language': 'en-us',
         'db_uri': 'sqlite:///:memory:',
         'app_secret_key': 'CHANGEME',

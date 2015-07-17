@@ -4,12 +4,15 @@ Most of the Iron Blogger specific logic is book keeping about dates;
 unsurprisingly there are a few generic helpers we need that aren't in the
 standard library.
 """
-from datetime import date, datetime, timedelta
+from datetime import timedelta
+import arrow
 from ironblogger import config
 
-# This constant *has* to be defined somewhere, but I can't find it.
-SUNDAY = timedelta(days=date(2015, 3, 29).weekday())
 ROUND_LEN = timedelta(weeks=1)
+
+
+def set_tz(dt):
+    return arrow.get(dt).to('UTC').datetime
 
 
 def duedate(post_date):
@@ -19,11 +22,13 @@ def duedate(post_date):
 
         isinstance(post_date, datetime)
     """
-    weekday = post_date.weekday()
-    # The due date should be upcoming *end* of a Sunday, hence the +1. Without
-    # this, a timestamp on a Sunday would always come *after* its duedate.
-    due_date = post_date - timedelta(days=weekday) + SUNDAY + timedelta(days=1)
-    return datetime(due_date.year, due_date.month, due_date.day)
+
+    post_date = arrow.get(post_date).to(config.cfg['timezone'])
+    # Luckily, the arrow library considers Sunday to be the last day of the
+    # week, so we don't need to do any special adjustment. NOTE: we need to
+    # return an actual datetime object; sqlalchemy won't store an Arrow in the
+    # database.
+    return post_date.ceil('week').to('UTC').datetime
 
 
 def rssdate(date_obj, cfg=None):
@@ -34,11 +39,7 @@ def rssdate(date_obj, cfg=None):
     """
     if cfg is None:
         cfg = config.cfg
-    timestamp = date_obj.strftime('%d %b %Y %T ')
-    timezone = date_obj.strftime('%z')
-    if timezone == '':
-        timezone = cfg['timezone']
-    return timestamp + timezone
+    return arrow.get(date_obj).to(cfg['timezone']).strftime('%d %b %Y %T %z')
 
 
 def divide_timedelta(numerator, denominator):

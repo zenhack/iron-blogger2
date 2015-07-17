@@ -39,7 +39,7 @@ def init_db():
 def assign_rounds(since=None, until=None):
     """Assign posts to rounds."""
     if until is None:
-        until = datetime.now()
+        until = datetime.utcnow()
     if since is None:
         since = db.session.query(Blogger.start_date)\
                           .order_by(Blogger.start_date).first()[0]

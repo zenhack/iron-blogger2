@@ -20,7 +20,8 @@ from ironblogger.app import app, load_user
 from ironblogger.model import db, Blogger, Blog, Post, Payment, Party
 from ironblogger.model import DEBT_PER_POST, LATE_PENALTY
 from ironblogger import config
-from ironblogger.date import rssdate, duedate, ROUND_LEN, divide_timedelta
+from ironblogger.date import rssdate, duedate, ROUND_LEN, divide_timedelta, \
+    set_tz
 from ironblogger.currency import format_usd
 from collections import defaultdict
 from datetime import datetime
@@ -42,7 +43,8 @@ def show_status():
     if first_round is None:
         num_rounds = 0
     else:
-        first_round = first_round[0]  # SQLAlchemy returns a tuple of the rows
+        # SQLAlchemy returns a tuple of the rows
+        first_round = set_tz(first_round[0])
         num_rounds = divide_timedelta(current_round - first_round, ROUND_LEN)
     pageinfo = _page_args(item_count=num_rounds, size=5)
     start_round = current_round - (ROUND_LEN * pageinfo['size'] * pageinfo['num'])
@@ -69,16 +71,16 @@ def show_status():
             'author'    : post.blog.blogger.name,
             'blog_title': post.blog.title,
             'blog_url'  : post.blog.page_url,
-            'timestamp' : post.timestamp,
-            'counts_for': post.counts_for,
-            'late?'     : duedate(post.timestamp) != post.counts_for,
+            'timestamp' : set_tz(post.timestamp),
+            'counts_for': set_tz(post.counts_for),
+            'late?'     : duedate(post.timestamp) != set_tz(post.counts_for),
         }
         def _add_post(date):
             rounds[date]['posts'].append(post_view)
             rounds[date]['no-post'] -= set([post_view['author']])
         _add_post(duedate(post.timestamp))
         if post_view['counts_for'] is not None and post_view['late?']:
-            _add_post(post.counts_for)
+            _add_post(set_tz(post.counts_for))
     for k in rounds.keys():
         rounds[k]['no-post'] = sorted(rounds[k]['no-post'])
     return render_template('status.html',

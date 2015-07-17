@@ -30,6 +30,7 @@ setup(name='ironblogger',
           'PyYAML',
           'schema',
           'alembic',
+          'arrow',
           # Depending on your database, you may need one of the following.
           # uncomment as needed:
           #

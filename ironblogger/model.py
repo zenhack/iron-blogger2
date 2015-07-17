@@ -12,8 +12,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>
-from datetime import datetime
-import time
+import arrow
 import logging
 
 from flask.ext.sqlalchemy import SQLAlchemy
@@ -23,7 +22,7 @@ import feedparser
 import jinja2
 
 import ironblogger.date
-from ironblogger.date import duedate, ROUND_LEN, divide_timedelta
+from ironblogger.date import duedate, ROUND_LEN, divide_timedelta, set_tz
 
 DEBT_PER_POST = 500
 LATE_PENALTY = 100
@@ -212,7 +211,7 @@ class Post(db.Model):
         for key in 'published', 'created', 'updated':
             key += '_parsed'
             if key in feed_entry and feed_entry[key] is not None:
-                return datetime.fromtimestamp(time.mktime(feed_entry[key]))
+                return arrow.get(feed_entry[key]).to('UTC').datetime
         raise MalformedPostError("No valid publication date in post: %r" %
                                  feed_entry)
 
@@ -309,5 +308,10 @@ class Post(db.Model):
         if self.counts_for is None:
             return None
 
-        return divide_timedelta(duedate(self.timestamp) - self.counts_for,
+        return divide_timedelta(duedate(self.timestamp) -
+                                # We need to give counts_for a timezone in
+                                # order to subtract it from duedate; logically
+                                # everything in the DB is UTC, but it doesn't
+                                # actualy store that.
+                                set_tz(self.counts_for),
                                 ROUND_LEN)
