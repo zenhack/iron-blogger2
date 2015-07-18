@@ -198,6 +198,13 @@ class Post(db.Model):
         backref=db.backref('posts', cascade='all, delete-orphan')
     )
 
+    __table_args__ = (
+        # Note that the constraint we want is actually stronger than this:
+        # (counts_for, blog.blogger_id) should be unique, but it's difficult
+        # (if it's even possible) to specify cross-table constriants like that.
+        db.UniqueConstraint('counts_for', 'blog_id'),
+    )
+
     @staticmethod
     def _get_pub_date(feed_entry):
         """Return a datetime.datetime object for the post's publication date.
@@ -288,7 +295,7 @@ class Post(db.Model):
                     Blog.blogger_id == self.blog.blogger.id)\
             .order_by(Post.counts_for.desc())\
             .all()
-        dates = set([date[0] for date in dates])
+        dates = set([set_tz(date[0]) for date in dates])
 
         # Assign the most recent round this post can count for.
         round = duedate(self.timestamp)
