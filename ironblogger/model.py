@@ -24,6 +24,7 @@ import jinja2
 import ironblogger.date
 from ironblogger.date import duedate, ROUND_LEN, divide_timedelta, set_tz
 
+MAX_DEBT = 3000
 DEBT_PER_POST = 500
 LATE_PENALTY = 100
 
