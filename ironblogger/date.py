@@ -48,6 +48,11 @@ def divide_timedelta(numerator, denominator):
     The timedelta type doesn't have it's own divide operator, which
     is something we need in a few places.
 
+    Both numerator and denominator *must* be whole-second quantities.
+
     The return value is of type int, not timedelta.
     """
-    return numerator.total_seconds()/denominator.total_seconds()
+    # total_seconds returns a floating point value, but for our purposes it's
+    # always going to be an integer, and we don't want to deal with precision
+    # errors, so we convert before dividing.
+    return int(numerator.total_seconds())/int(denominator.total_seconds())
