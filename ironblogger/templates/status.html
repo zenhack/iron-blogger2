@@ -3,7 +3,7 @@
 {% block content %}
 
 {% for duedate, round in rounds %}
-<h2>Round ending {{ duedate }}</h2>
+<h2>Round ending {{ duedate.strftime("%A %B %d, %Y at %I:%M %P") }}</h2>
 
 <table class="table">
 	<tr>

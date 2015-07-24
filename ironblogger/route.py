@@ -21,7 +21,7 @@ from ironblogger.model import db, Blogger, Blog, Post, Payment, Party
 from ironblogger.model import DEBT_PER_POST, LATE_PENALTY, MAX_DEBT
 from ironblogger import config
 from ironblogger.date import rssdate, duedate, ROUND_LEN, divide_timedelta, \
-    set_tz
+    set_tz, in_localtime
 from ironblogger.currency import format_usd
 from collections import defaultdict
 from datetime import datetime
@@ -71,16 +71,16 @@ def show_status():
             'author'    : post.blog.blogger.name,
             'blog_title': post.blog.title,
             'blog_url'  : post.blog.page_url,
-            'timestamp' : set_tz(post.timestamp),
-            'counts_for': set_tz(post.counts_for),
+            'timestamp' : in_localtime(post.timestamp),
+            'counts_for': in_localtime(post.counts_for),
             'late?'     : duedate(post.timestamp) != set_tz(post.counts_for),
         }
         def _add_post(date):
             rounds[date]['posts'].append(post_view)
             rounds[date]['no-post'] -= set([post_view['author']])
-        _add_post(duedate(post.timestamp))
+        _add_post(in_localtime(duedate(post.timestamp)))
         if post_view['counts_for'] is not None and post_view['late?']:
-            _add_post(set_tz(post.counts_for))
+            _add_post(in_localtime(post.counts_for))
     for k in rounds.keys():
         rounds[k]['no-post'] = sorted(rounds[k]['no-post'])
     return render_template('status.html',

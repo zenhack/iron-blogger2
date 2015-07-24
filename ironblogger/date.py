@@ -15,6 +15,10 @@ def set_tz(dt):
     return arrow.get(dt).to('UTC').datetime
 
 
+def in_localtime(dt):
+    return arrow.get(set_tz(dt)).to(config.cfg['timezone']).datetime
+
+
 def duedate(post_date):
     """The due date for which a post published on ``post_date`` counts.
 
