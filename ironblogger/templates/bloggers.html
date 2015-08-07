@@ -16,7 +16,7 @@
 			{% endfor %}
 			</ul>
 		</td>
-		<td>{{ blogger.start_date }}</td>
+		<td>{{ blogger.start_date | datestamp }}</td>
 	</tr>
 	{% endfor %}
 </table>

@@ -16,3 +16,8 @@ def timestamp_long(date):
 @app.template_filter()
 def timestamp_short(date):
     return date.strftime(app.config['IB2_TIMESTAMP_SHORT'])
+
+
+@app.template_filter()
+def datestamp(date):
+    return date.strftime(app.config['IB2_DATESTAMP'])

@@ -19,4 +19,5 @@ app.config.update(
     # defaults:
     IB2_TIMESTAMP_LONG='%c',
     IB2_TIMESTAMP_SHORT='%c',
+    IB2_DATESTAMP='%F',
 )
