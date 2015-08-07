@@ -15,9 +15,9 @@
 	{% for blogger in bloggers %}
 	<tr>
 		<td>{{ blogger['name'] }}</td>
-		<td>{{ format_usd(blogger['incurred']) }}</td>
-		<td>{{ format_usd(blogger['paid']) }}</td>
-		<td>{{ format_usd(blogger['owed']) }}</td>
+		<td>{{ blogger['incurred'] | currency }}</td>
+		<td>{{ blogger['paid'] | currency}}</td>
+		<td>{{ blogger['owed'] | currency }}</td>
 	</tr>
 	{% endfor %}
 </table>
@@ -32,12 +32,12 @@
 	{% for party in parties %}
 	<tr>
 		<td>{{ party['date'] }}</td>
-		<td>{{ format_usd(party['spent']) }}</td>
+		<td>{{ party['spent'] | currency }}</td>
 	</tr>
 	{% endfor %}
 </table>
 
-<p>Current Budget: {{ format_usd(budget) }} ({{ format_usd(collected) }}
+<p>Current Budget: {{ budget | currency }} ({{ collected | currency }}
 collected)</p>
 
 {% endblock %}

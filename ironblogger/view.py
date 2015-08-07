@@ -38,9 +38,15 @@ def load_user(user_id):
 
 def render_template(*args, **kwargs):
     kwargs['cfg'] = app.config
-    kwargs['format_usd'] = format_usd
-    kwargs['rssdate'] = rssdate
     return flask.render_template(*args, **kwargs)
+
+
+@app.template_filter()
+def currency(value):
+    return format_usd(value)
+
+
+rssdate = app.template_filter()(rssdate)
 
 
 @app.route('/status')
