@@ -1,7 +1,7 @@
 from . import config
 from .app import app as application
 from .model import db as _db
-from . import route as _route
+from . import view as _view
 from .admin import admin as _admin
 
 _setup_already = False
