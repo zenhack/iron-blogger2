@@ -14,3 +14,9 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>
 import flask
 app = flask.Flask(__name__)
+
+app.config.update(
+    # defaults:
+    IB2_TIMESTAMP_LONG='%c',
+    IB2_TIMESTAMP_SHORT='%c',
+)

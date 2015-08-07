@@ -3,7 +3,7 @@
 {% block content %}
 
 {% for duedate, round in rounds %}
-<h2>Round ending {{ duedate.strftime("%A %B %d, %Y at %I:%M %P") }}</h2>
+<h2>Round ending {{ duedate | timestamp_long }}</h2>
 
 <table class="table">
 	<tr>
@@ -18,11 +18,11 @@
 		<td><a href="{{ post.page_url }}">{{ post.title }}</a></td>
 		<td><a href="{{ post['blog_url'] }}">{{ post['blog_title'] }}</a></td>
 		<td>
-			{{ post['timestamp'] }}
+			{{ post['timestamp'] | timestamp_short }}
 			{% if post['counts_for'] == None %}
 			(Bonus!)
 			{% elif post['counts_for'] < duedate %}
-			(Late, counts for {{ post['counts_for'] }})
+			(Late, counts for {{ post['counts_for'] | timestamp_short }})
 			{% elif post['late?'] %}
 			(Late)
 			{% endif %}

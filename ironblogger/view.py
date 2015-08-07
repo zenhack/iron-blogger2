@@ -19,11 +19,13 @@ from flask.ext.login import login_user, logout_user, login_required, LoginManage
 from .app import app
 from .model import db, Blogger, Blog, Post, Payment, Party, User
 from .model import DEBT_PER_POST, LATE_PENALTY, MAX_DEBT
-from .date import rssdate, duedate, ROUND_LEN, divide_timedelta, \
-    set_tz, in_localtime
-from .currency import format_usd
+from .date import duedate, ROUND_LEN, divide_timedelta, set_tz, in_localtime
 from collections import defaultdict
 from datetime import datetime
+
+# We don't reference this anywhere else in this file, but we're importing it
+# for the side effect of defining the filters:
+from . import template_filters
 
 
 login_manager = LoginManager()
@@ -39,14 +41,6 @@ def load_user(user_id):
 def render_template(*args, **kwargs):
     kwargs['cfg'] = app.config
     return flask.render_template(*args, **kwargs)
-
-
-@app.template_filter()
-def currency(value):
-    return format_usd(value)
-
-
-rssdate = app.template_filter()(rssdate)
 
 
 @app.route('/status')
