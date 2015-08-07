@@ -24,13 +24,15 @@ from ironblogger.wsgi import *
 
 
 APPNAME = 'ironblogger'  # The name of our app on openshift.
-setup({
-    'region': 'Boston',
-    'timezone': '-0500',
-    'language': 'en-us',
-    'db_uri': os.getenv('OPENSHIFT_POSTGRESQL_DB_URL') + '/' + APPNAME,
+application.config.update(
+    IB2_REGION='Boston',
+    IB2_TIMEZONE='US/Eastern',
+    IB2_LANGUAGE='en-us',
+    SQLALCHEMY_DATABASE_URI=os.getenv('OPENSHIFT_POSTGRESQL_DB_URL') + '/' + APPNAME,
     # Secret key used for things like storing session information.
     # You can generate a key by running:
     #   dd if=/dev/random bs=1 count=128 | base64
-    # 'app_secret_key': 'CHANGEME',
-})
+    # SECRET_KEY='CHANGEME',
+)
+
+init_app()

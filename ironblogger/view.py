@@ -19,7 +19,6 @@ from flask.ext.login import login_user, logout_user, login_required, LoginManage
 from .app import app
 from .model import db, Blogger, Blog, Post, Payment, Party, User
 from .model import DEBT_PER_POST, LATE_PENALTY, MAX_DEBT
-from . import config
 from .date import rssdate, duedate, ROUND_LEN, divide_timedelta, \
     set_tz, in_localtime
 from .currency import format_usd
@@ -38,7 +37,7 @@ def load_user(user_id):
 
 
 def render_template(*args, **kwargs):
-    kwargs['cfg'] = config.cfg
+    kwargs['cfg'] = app.config
     kwargs['format_usd'] = format_usd
     kwargs['rssdate'] = rssdate
     return flask.render_template(*args, **kwargs)

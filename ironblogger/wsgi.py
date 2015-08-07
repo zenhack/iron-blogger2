@@ -1,4 +1,3 @@
-from . import config
 from .app import app as application
 from .model import db as _db
 from . import view as _view
@@ -6,10 +5,8 @@ from .admin import admin as _admin
 
 _setup_already = False
 
-def setup(cfg):
-    config.setup(cfg)
-    application.config['SQLALCHEMY_DATABASE_URI'] = config.cfg['db_uri']
-    application.secret_key = config.cfg['app_secret_key']
+
+def init_app():
     _db.init_app(application)
     global _setup_already
     if not _setup_already:

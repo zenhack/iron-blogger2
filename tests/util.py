@@ -1,16 +1,17 @@
 from ironblogger.app import app
-from ironblogger.wsgi import setup
+from ironblogger.wsgi import init_app
 from ironblogger.model import db
 
 
 def fresh_context():
-    setup({
-        'region': 'Boston',
-        'timezone': 'US/Eastern',
-        'language': 'en-us',
-        'db_uri': 'sqlite:///:memory:',
-        'app_secret_key': 'CHANGEME',
-    })
+    app.config.update(
+        IB2_REGION='Boston',
+        IB2_TIMEZONE='US/Eastern',
+        IB2_LANGUAGE='en-us',
+        SQLALCHEMY_DATABASE_URI='sqlite:///:memory:',
+        SECRET_KEY='CHANGEME',
+    )
+    init_app()
     with app.test_request_context():
         db.create_all()
         yield
