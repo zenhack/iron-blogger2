@@ -20,8 +20,7 @@ application.config.update(
     # for the locale, but you'll probably want to override them with something
     # nicer. Here's a good example for US English:
     # IB2_TIMESTAMP_LONG="%A %B %d, %Y at %I:%M %P"
-    # TODO: Make this something shorter (i.e. not just the same as above):
-    # IB2_TIMESTAMP_SHORT="%A %B %d, %Y at %I:%M %P"
+    # IB2_TIMESTAMP_SHORT="%a %b %d, %I:%M %P",
 )
 
 init_app()
