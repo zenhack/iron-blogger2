@@ -5,6 +5,7 @@ from flask.ext import login
 from . import model
 from .currency import format_usd
 
+
 class AdminViewMixin(object):
     """A mixin class which restricts access to admin users."""
 

@@ -14,10 +14,10 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>
 import flask
 from flask import make_response, request, url_for
-from flask.ext.login import login_user, logout_user, login_required
+from flask.ext.login import login_user, logout_user, login_required, LoginManager
 
-from .app import app, load_user
-from .model import db, Blogger, Blog, Post, Payment, Party
+from .app import app
+from .model import db, Blogger, Blog, Post, Payment, Party, User
 from .model import DEBT_PER_POST, LATE_PENALTY, MAX_DEBT
 from . import config
 from .date import rssdate, duedate, ROUND_LEN, divide_timedelta, \
@@ -25,6 +25,16 @@ from .date import rssdate, duedate, ROUND_LEN, divide_timedelta, \
 from .currency import format_usd
 from collections import defaultdict
 from datetime import datetime
+
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return db.session.query(User)\
+        .filter_by(name=user_id).first()
 
 
 def render_template(*args, **kwargs):
