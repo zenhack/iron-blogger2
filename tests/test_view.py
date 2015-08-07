@@ -21,6 +21,7 @@ def test_root(client):
     '/ledger',
     '/rss',
     '/about',
+    '/login',
 
     # Not on the main nav, but still.
     '/admin/',
