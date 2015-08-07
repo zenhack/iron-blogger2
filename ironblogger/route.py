@@ -16,13 +16,13 @@ import flask
 from flask import make_response, request, url_for
 from flask.ext.login import login_user, logout_user, login_required
 
-from ironblogger.app import app, load_user
-from ironblogger.model import db, Blogger, Blog, Post, Payment, Party
-from ironblogger.model import DEBT_PER_POST, LATE_PENALTY, MAX_DEBT
-from ironblogger import config
-from ironblogger.date import rssdate, duedate, ROUND_LEN, divide_timedelta, \
+from .app import app, load_user
+from .model import db, Blogger, Blog, Post, Payment, Party
+from .model import DEBT_PER_POST, LATE_PENALTY, MAX_DEBT
+from . import config
+from .date import rssdate, duedate, ROUND_LEN, divide_timedelta, \
     set_tz, in_localtime
-from ironblogger.currency import format_usd
+from .currency import format_usd
 from collections import defaultdict
 from datetime import datetime
 

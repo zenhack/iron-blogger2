@@ -6,7 +6,7 @@ standard library.
 """
 from datetime import timedelta
 import arrow
-from ironblogger import config
+from . import config
 
 ROUND_LEN = timedelta(weeks=1)
 

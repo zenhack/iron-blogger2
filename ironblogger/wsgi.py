@@ -1,8 +1,8 @@
-from ironblogger import config
-from ironblogger.app import app as application
-from ironblogger.model import db as _db
-from ironblogger import route as _route
-from ironblogger.admin import admin as _admin
+from . import config
+from .app import app as application
+from .model import db as _db
+from . import route as _route
+from .admin import admin as _admin
 
 _setup_already = False
 

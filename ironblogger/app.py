@@ -14,7 +14,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>
 import flask
 from flask.ext.login import LoginManager
-from ironblogger.model import db, User
+from .model import db, User
 
 
 app = flask.Flask(__name__)

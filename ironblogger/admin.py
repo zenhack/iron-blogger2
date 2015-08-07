@@ -1,8 +1,9 @@
 from flask.ext.admin import Admin, BaseView, expose
 from flask.ext.admin.contrib.sqla import ModelView
 from flask.ext import login
-from ironblogger import model
-from ironblogger.currency import format_usd
+
+from . import model
+from .currency import format_usd
 
 class AdminViewMixin(object):
     """A mixin class which restricts access to admin users."""

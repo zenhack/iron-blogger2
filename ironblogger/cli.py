@@ -15,8 +15,8 @@
 
 import sys
 
-from ironblogger.tasks import *
-from ironblogger.app import app
+from .tasks import *
+from .app import app
 
 
 def usage(exit_status=1):

@@ -21,8 +21,10 @@ from passlib.hash import sha512_crypt
 import feedparser
 import jinja2
 
-import ironblogger.date
-from ironblogger.date import duedate, ROUND_LEN, divide_timedelta, set_tz
+# XXX: We need to call this from a method called rssdate, so we need to rename
+# it to avoid a naming collision.
+from .date import rssdate as _ib_rssdate
+from .date import duedate, ROUND_LEN, divide_timedelta, set_tz
 
 MAX_DEBT = 3000
 DEBT_PER_POST = 500
@@ -281,7 +283,7 @@ class Post(db.Model):
         return post
 
     def rssdate(self):
-        return ironblogger.date.rssdate(self.timestamp)
+        return _ib_rssdate(self.timestamp)
 
     def assign_round(self):
         # Get all of the dates that this post could count for, but which are
