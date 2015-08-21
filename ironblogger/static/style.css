@@ -81,6 +81,11 @@ section {
   overflow:hidden;
 }
 
+section > p img {
+  display:block;
+  margin:0 auto;
+}
+
 form.login {
   text-align:center;
 }
