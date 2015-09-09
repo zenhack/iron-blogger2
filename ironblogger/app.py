@@ -20,5 +20,5 @@ app.config.update(
     IB2_TIMESTAMP_LONG='%c',
     IB2_TIMESTAMP_SHORT='%c',
     IB2_DATESTAMP='%F',
-    IB2_POSTS_PER_PAGE=50,
+    IB2_POSTS_PER_PAGE=20,
 )
