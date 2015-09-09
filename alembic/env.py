@@ -4,14 +4,14 @@ from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
 
 import wsgi
-from ironblogger import config as ironblogger_config
+from ironblogger.app import app
 from ironblogger.model import db
 
 config = context.config
 fileConfig(config.config_file_name)
 
 # Grab the database url from our existing config:
-config.set_main_option('sqlalchemy.url', ironblogger_config.cfg['db_uri'])
+config.set_main_option('sqlalchemy.url', app.config['SQLALCHEMY_DATABASE_URI'])
 
 # add your model's MetaData object here
 # for 'autogenerate' support
