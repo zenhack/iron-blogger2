@@ -162,13 +162,15 @@ def show_rss():
     return resp
 
 
-def _page_args(item_count, num=0, size=50):
+def _page_args(item_count, num=0, size=None):
     """Extract pagination from the query string
 
     This should be called from a function which display paginated data.
     ``item_count`` should be the total number of items in the paginated
     data. ``num`` and ``size`` are the default page number and page size,
     respectively. These are used if the client does not specify a value.
+
+    If size is ``None``, it defaults to ``app.config['IB2_POSTS_PER_PAGE']``.
 
     If the client provides invalid arguments or requests a page which does not
     exist, ``_parse_args`` will abort the request handler, and return a 400 or
@@ -181,6 +183,8 @@ def _page_args(item_count, num=0, size=50):
         'is_first' - True iff this is the first page of the data
         'is_last': - True iff this is the last page of the data
     """
+    if size is None:
+        size = app.config['IB2_POSTS_PER_PAGE']
     try:
         num = int(request.args.get('page', num))
         size = int(request.args.get('page_size', size))
