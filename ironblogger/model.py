@@ -142,9 +142,14 @@ class Blog(db.Model):
                     # or equal here, since someone might post more than one
                     # post in a day.
                     break
-                if post.timestamp == set_tz(last_post.timestamp) and post.title == last_post.title:
-                    # If a post has the same date as one already in the db (on
-                    # the same blog), we use the title as an identifier.
+                if post.timestamp != set_tz(last_post.timestamp):
+                    continue
+                # If both the date and any of the below attributes match a post
+                # already in the db, we consider it to be the same post. Note
+                # that guid can be NULL, so we need to check for that.
+                if ((post.guid is not None and post.guid == last_post.guid) or
+                        post.title == last_post.title or
+                        post.page_url == last_post.page_url):
                     break
 
             post.blog = self
@@ -185,6 +190,7 @@ class Post(db.Model):
     """A blog post."""
     id         = db.Column(db.Integer,  primary_key=True)
     blog_id    = db.Column(db.Integer,  db.ForeignKey('blog.id'), nullable=False)
+    guid       = db.Column(db.String)
     timestamp  = db.Column(db.DateTime, nullable=False)
     counts_for = db.Column(db.DateTime)
     title      = db.Column(db.String,   nullable=False)
@@ -199,6 +205,10 @@ class Post(db.Model):
     )
 
     __table_args__ = (
+
+        db.UniqueConstraint('blog_id', 'guid'),
+        db.UniqueConstraint('blog_id', 'page_url'),
+
         # Note that the constraint we want is actually stronger than this:
         # (counts_for, blog.blogger_id) should be unique, but it's difficult
         # (if it's even possible) to specify cross-table constriants like that.
@@ -240,6 +250,8 @@ class Post(db.Model):
         post.timestamp = Post._get_pub_date(entry)
         post.title = entry['title']
         post.summary = entry['summary']
+        if hasattr(entry, 'id'):
+            post.guid = entry.id
 
         # The summary detail attribute lets us find the mime type of the
         # summary. feedparser doesn't escape it if it's text/plain, so we need
