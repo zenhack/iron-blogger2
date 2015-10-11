@@ -48,7 +48,7 @@ def show_status():
 
     first_round = db.session.query(Blogger.start_date)\
         .order_by(Blogger.start_date.asc()).first()
-    current_round = duedate(datetime.now())
+    current_round = duedate(datetime.utcnow())
     if first_round is None:
         num_rounds = 0
     else:
