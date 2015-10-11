@@ -178,10 +178,13 @@ class Party(db.Model):
 class Payment(db.Model):
     id         = db.Column(db.Integer, primary_key=True)
     blogger_id = db.Column(db.Integer, db.ForeignKey('blogger.id'), nullable=False)
-    amount     = db.Column(db.Integer, nullable=False)  # monetary amount, in units
-                                                        # of $0.01 USD.
-                                                        # Internationalization
-                                                        # is still TODO.
+
+    # Date covered by the payment:
+    duedate = db.Column(db.DateTime, nullable=False)
+
+    # monetary amount, in units of $0.01 USD. Internationalization is still
+    # TODO:
+    amount = db.Column(db.Integer, nullable=False)
 
     blogger = db.relationship(
         'Blogger',
