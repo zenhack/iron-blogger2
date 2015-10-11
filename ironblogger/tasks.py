@@ -12,12 +12,13 @@ import yaml
 import json
 import arrow
 import logging
+from getpass import getpass
 from datetime import datetime
 from os import path
 
 import ironblogger
 from .app import app
-from .model import Blogger, Blog, Post, MalformedPostError, db
+from .model import Blogger, Blog, Post, User, MalformedPostError, db
 
 from alembic.config import Config
 from alembic import command
@@ -137,3 +138,22 @@ def sync_posts():
             blog.sync_posts()
         except MalformedPostError as e:
             logging.info('%s', e)
+
+
+def make_admin():
+    """Create an admin user.
+
+    Prompts the user via the CLI for a username and password, and creates
+    an admin user.
+    """
+    username = raw_input('Admin username: ')
+    while True:
+        pw1 = getpass()
+        pw2 = getpass('Password (again):')
+        if pw1 == pw2:
+            break
+        print('Passwords did not match, try again.')
+    user = User(name=username, is_admin=True)
+    user.set_password(pw1)
+    db.session.add(user)
+    db.session.commit()
