@@ -21,7 +21,7 @@ from passlib.hash import sha512_crypt
 import feedparser
 import jinja2
 
-from .date import duedate, ROUND_LEN, divide_timedelta, set_tz
+from .date import duedate, ROUND_LEN, divide_timedelta, set_tz, to_dbtime
 
 MAX_DEBT = 3000
 DEBT_PER_POST = 500
@@ -247,7 +247,7 @@ class Post(db.Model):
             if field not in entry:
                 raise MalformedPostError("Post has no %s: %r" % (field, entry))
         post = Post()
-        post.timestamp = Post._get_pub_date(entry)
+        post.timestamp = to_dbtime(Post._get_pub_date(entry))
         post.title = entry['title']
         post.summary = entry['summary']
         if hasattr(entry, 'id'):
@@ -298,8 +298,8 @@ class Post(db.Model):
         oldest_valid_duedate = max(oldest_valid_duedate, duedate(self.blog.blogger.start_date))
         dates = db.session.query(Post.counts_for)\
             .filter(Post.counts_for != None,
-                    Post.counts_for <= duedate(self.timestamp),
-                    Post.counts_for >= oldest_valid_duedate,
+                    Post.counts_for <= to_dbtime(duedate(self.timestamp)),
+                    Post.counts_for >= to_dbtime(oldest_valid_duedate),
                     Post.blog_id == Blog.id,
                     Blog.blogger_id == self.blog.blogger.id)\
             .order_by(Post.counts_for.desc())\
@@ -310,7 +310,7 @@ class Post(db.Model):
         round = duedate(self.timestamp)
         while round >= oldest_valid_duedate:
             if round not in dates:
-                self.counts_for = round
+                self.counts_for = to_dbtime(round)
                 break
             round -= ROUND_LEN
 

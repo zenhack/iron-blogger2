@@ -11,6 +11,10 @@ from .app import app
 ROUND_LEN = timedelta(weeks=1)
 
 
+def to_dbtime(dt):
+    return set_tz(dt).replace(tzinfo=None)
+
+
 def set_tz(dt):
     return arrow.get(dt).to('UTC').datetime
 
