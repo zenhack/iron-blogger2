@@ -19,7 +19,8 @@ from flask.ext.login import login_user, logout_user, login_required, LoginManage
 from .app import app
 from .model import db, Blogger, Blog, Post, Payment, Party, User
 from .model import DEBT_PER_POST, LATE_PENALTY, MAX_DEBT
-from .date import duedate, ROUND_LEN, divide_timedelta, set_tz, in_localtime
+from .date import duedate, ROUND_LEN, divide_timedelta, set_tz, in_localtime, \
+    to_dbtime
 from collections import defaultdict
 from datetime import datetime
 
@@ -97,43 +98,66 @@ def show_status():
                            pageinfo=pageinfo)
 
 
-@app.route('/ledger')
-def show_ledger():
-    data = []
-    now = datetime.now()
+def build_ledger(start, stop):
+    start = duedate(start)
+    stop = duedate(stop)
+    data = {'bloggers': {}}
     bloggers = db.session.query(Blogger).order_by(Blogger.name).all()
     total_paid = 0
     total_incurred = 0
     for blogger in bloggers:
         first_duedate = duedate(blogger.start_date)
-        current_duedate = duedate(now)
+        first_duedate = max(first_duedate, start)
         posts = db.session.query(Post)\
             .filter(Post.counts_for != None,
-                    Post.counts_for >= first_duedate,
-                    Post.counts_for < current_duedate,
+                    Post.counts_for >= to_dbtime(first_duedate),
+                    Post.counts_for < to_dbtime(stop),
                     Post.blog_id == Blog.id,
                     Blog.blogger_id == blogger.id)\
             .order_by(Post.counts_for.desc()).all()
-        num_rounds = divide_timedelta(current_duedate - first_duedate,
-                                      ROUND_LEN)
+        num_rounds = divide_timedelta(stop - start, ROUND_LEN)
         missed = num_rounds - len(posts)
         incurred = DEBT_PER_POST * missed
         for post in posts:
             incurred += post.rounds_late() * LATE_PENALTY
         paid = 0
         payments = db.session.query(Payment.amount)\
-            .filter(Payment.blogger_id == blogger.id).all()
+            .filter(Payment.blogger_id == blogger.id,
+                    Payment.duedate >= to_dbtime(first_duedate),
+                    Payment.duedate < to_dbtime(stop)).all()
         for payment in payments:
             paid += payment.amount
         incurred = min(incurred, MAX_DEBT)
-        data.append({
-            'name': blogger.name,
+        data['bloggers'][blogger.name] = {
             'incurred': incurred,
             'paid': paid,
             'owed': incurred - paid,
-        })
+        }
         total_paid += paid
         total_incurred += incurred
+    data['total'] = {
+        'incurred': total_incurred,
+        'paid': total_paid,
+        'owed': total_incurred - total_paid,
+    }
+    return data
+
+
+@app.route('/ledger')
+def show_ledger():
+
+    # Sloppily recreate the old data structure for now; we need to adjust a few
+    # other things (like the template) before we can use the ouptut of
+    # build_ledger properly.
+    first_duedate = duedate(db.session.query(Blogger.start_date)\
+                            .order_by(Blogger.start_date.asc())\
+                            .first()[0])
+    ledger = build_ledger(first_duedate, datetime.utcnow())
+    data = []
+    for k, v in ledger['bloggers'].items():
+        v['name'] = k
+        data.append(v)
+
     parties = db.session.query(Party).order_by(Party.date.desc()).all()
     spent = 0
     for party in parties:
@@ -144,8 +168,8 @@ def show_ledger():
         'ledger.html',
         bloggers=data,
         parties=parties,
-        budget=total_incurred - spent,
-        collected = total_paid)
+        budget=ledger['total']['incurred'] - spent,
+        collected = ledger['total']['paid'])
 
 
 @app.route('/bloggers')
