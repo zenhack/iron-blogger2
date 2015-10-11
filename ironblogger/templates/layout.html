@@ -20,7 +20,7 @@
 			<div class="col-md-8">
 				<h1><a href="{{ url_for('show_index') }}">Iron Blogger {{ cfg['IB2_REGION'] }}</a></h1>
 				<div class="subtitle">
-					{% if not current_user.is_authenticated %}
+					{% if not current_user.is_authenticated() %}
 					{% set targ, text, method = ('show_login', 'Log In', 'get') %}
 					{% else %}
 					{% set targ, text, method = ('do_logout', 'Log Out', 'post') %}

@@ -10,7 +10,7 @@ class AdminViewMixin(object):
     """A mixin class which restricts access to admin users."""
 
     def is_accessible(self):
-        return login.current_user.is_authenticated and login.current_user.is_admin
+        return login.current_user.is_authenticated() and login.current_user.is_admin
 
 
 class AdminModelView(AdminViewMixin, ModelView):
