@@ -10,6 +10,7 @@ Those which need one create one themselves.
 
 import yaml
 import json
+import arrow
 import logging
 from datetime import datetime
 from os import path
@@ -84,7 +85,7 @@ def import_bloggers(file):
     yml = yaml.load(file)
     for blogger in yml.iteritems():
         name = blogger[0]
-        start_date = blogger[1]['start']
+        start_date = arrow.get(blogger[1]['start']).datetime
         model = Blogger(name=name, start_date=start_date)
         for link in blogger[1]['links']:
             model.blogs.append(Blog(title=link[0],
