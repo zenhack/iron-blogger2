@@ -9,6 +9,7 @@ Those which need one create one themselves.
 """
 
 import yaml
+import json
 import logging
 from datetime import datetime
 from os import path
@@ -92,6 +93,28 @@ def import_bloggers(file):
                                     ))
         session.add(model)
     session.commit()
+
+
+def export_bloggers(file):
+    """Inverse of `import_bloggers`.
+
+    This outputs a file as described in the docstring for `import_bloggers`,
+    based on the contents of the database.
+    """
+    result = {}
+    bloggers = db.session.query(Blogger).all()
+    for blogger in bloggers:
+        result[blogger.name] = {
+            'start': blogger.start_date.strftime("%F"),
+            'links': [
+                [blog.title, blog.page_url, blog.feed_url]
+                for blog in blogger.blogs
+            ]
+        }
+    # If we use the yaml library to dump, We'll get !!python/unicode
+    # everywhere, which... ew. Fortunately, JSON is a strict subset of yaml,
+    # and it covers enough ground for our purposes, so we'll just output that:
+    json.dump(result, file)
 
 
 def shell():
