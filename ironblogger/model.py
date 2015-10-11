@@ -171,6 +171,9 @@ class Party(db.Model):
     date  = db.Column(db.Date,    nullable=False)
     spent = db.Column(db.Integer, nullable=False)
 
+    first_duedate = db.Column(db.DateTime, unique=True)
+    last_duedate  = db.Column(db.DateTime, unique=True)
+
 
 class Payment(db.Model):
     id         = db.Column(db.Integer, primary_key=True)
@@ -291,15 +294,56 @@ class Post(db.Model):
 
         return post
 
+    def _oldest_valid_duedate(self):
+        ret = duedate(self.timestamp) - ROUND_LEN * (DEBT_PER_POST / LATE_PENALTY)
+        ret = max(ret, duedate(self.blog.blogger.start_date))
+
+        prev_party = self._prev_party()
+        cur_party = self._cur_party()
+
+        if prev_party is not None:
+            ret = max(ret, set_tz(prev_party.last_duedate) + ROUND_LEN)
+        if cur_party is not None:
+            ret = max(ret, set_tz(cur_party.first_duedate))
+
+        return ret
+
+    def _youngest_valid_duedate(self):
+        ret = duedate(self.timestamp)
+        next_party = self._next_party()
+        if next_party is not None:
+            ret = min(ret, set_tz(next_party.first_duedate) - ROUND_LEN)
+        return ret
+
+    def _prev_party(self):
+        due = to_dbtime(duedate(self.timestamp))
+        return db.session.query(Party)\
+            .filter(Party.last_duedate < due)\
+            .order_by(Party.last_duedate.desc())\
+            .first()
+
+    def _cur_party(self):
+        due = to_dbtime(duedate(self.timestamp))
+        return db.session.query(Party)\
+            .filter(Party.first_duedate <= due,
+                    Party.last_duedate  >= due).first()
+
+    def _next_party(self):
+        due = to_dbtime(duedate(self.timestamp))
+        return db.session.query(Party)\
+            .filter(Party.first_duedate >= due)\
+            .order_by(Party.first_duedate.asc())\
+            .first()
+
     def assign_round(self):
         # Get all of the dates that this post could count for, but which are
         # "taken" by other posts.
-        oldest_valid_duedate = duedate(self.timestamp) - ROUND_LEN * (DEBT_PER_POST / LATE_PENALTY)
-        oldest_valid_duedate = max(oldest_valid_duedate, duedate(self.blog.blogger.start_date))
+        oldest = self._oldest_valid_duedate()
+        youngest = self._youngest_valid_duedate()
         dates = db.session.query(Post.counts_for)\
             .filter(Post.counts_for != None,
-                    Post.counts_for <= to_dbtime(duedate(self.timestamp)),
-                    Post.counts_for >= to_dbtime(oldest_valid_duedate),
+                    Post.counts_for <= to_dbtime(youngest),
+                    Post.counts_for >= to_dbtime(oldest),
                     Post.blog_id == Blog.id,
                     Blog.blogger_id == self.blog.blogger.id)\
             .order_by(Post.counts_for.desc())\
@@ -307,8 +351,8 @@ class Post(db.Model):
         dates = set([set_tz(date[0]) for date in dates])
 
         # Assign the most recent round this post can count for.
-        round = duedate(self.timestamp)
-        while round >= oldest_valid_duedate:
+        round = youngest
+        while round >= oldest:
             if round not in dates:
                 self.counts_for = to_dbtime(round)
                 break
