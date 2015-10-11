@@ -53,7 +53,7 @@ def show_status():
         num_rounds = 0
     else:
         # SQLAlchemy returns a tuple of the rows
-        first_round = set_tz(first_round[0])
+        first_round = duedate(first_round[0])
         num_rounds = divide_timedelta(current_round - first_round, ROUND_LEN)
     pageinfo = _page_args(item_count=num_rounds, size=5)
     start_round = current_round - (ROUND_LEN * pageinfo['size'] * pageinfo['num'])
