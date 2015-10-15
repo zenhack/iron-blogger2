@@ -99,9 +99,19 @@ def show_status():
 
 
 def build_ledger(start, stop):
+    if start is None:
+        start = db.session.query(Blogger.start_date)\
+            .order_by(Blogger.start_date.asc()).first()
+        if start is None:
+            raise Exception("TODO: handle the case where there are no bloggers.")
+        start = start[0]
+
+    if stop is None:
+        stop = datetime.utcnow()
+
     start = duedate(start)
     stop = duedate(stop)
-    data = {'bloggers': {}}
+    data = {'bloggers': []}
     bloggers = db.session.query(Blogger).order_by(Blogger.name).all()
     total_paid = 0
     total_incurred = 0
@@ -128,11 +138,12 @@ def build_ledger(start, stop):
         for payment in payments:
             paid += payment.amount
         incurred = min(incurred, MAX_DEBT)
-        data['bloggers'][blogger.name] = {
+        data['bloggers'].append({
+            'name': blogger.name,
             'incurred': incurred,
             'paid': paid,
             'owed': incurred - paid,
-        }
+        })
         total_paid += paid
         total_incurred += incurred
     data['total'] = {
@@ -145,31 +156,24 @@ def build_ledger(start, stop):
 
 @app.route('/ledger')
 def show_ledger():
-
-    # Sloppily recreate the old data structure for now; we need to adjust a few
-    # other things (like the template) before we can use the ouptut of
-    # build_ledger properly.
-    first_duedate = duedate(db.session.query(Blogger.start_date)\
-                            .order_by(Blogger.start_date.asc())\
-                            .first()[0])
-    ledger = build_ledger(first_duedate, datetime.utcnow())
-    data = []
-    for k, v in ledger['bloggers'].items():
-        v['name'] = k
-        data.append(v)
-
+    info = []
     parties = db.session.query(Party).order_by(Party.date.desc()).all()
-    spent = 0
+    if len(parties) == 0:
+        ledger = build_ledger(None, None)
+        ledger['date'] = None
+        ledger['total']['spent'] = 0
+        info.append(ledger)
+    elif parties[0].last_duedate is not None:
+        ledger = build_ledger(parties[0].last_duedate + ROUND_LEN, None)
+        ledger['date'] = None
+        ledger['total']['spent'] = 0
+        info.append(ledger)
     for party in parties:
-        spent += party.spent
-    parties = [{'date': party.date, 'spent': party.spent}
-               for party in parties]
-    return render_template(
-        'ledger.html',
-        bloggers=data,
-        parties=parties,
-        budget=ledger['total']['incurred'] - spent,
-        collected = ledger['total']['paid'])
+        ledger = build_ledger(party.first_duedate, party.last_duedate)
+        ledger['date'] = party.date
+        ledger['total']['spent'] = party.spent
+        info.append(ledger)
+    return render_template('ledger.html', party_info=info)
 
 
 @app.route('/bloggers')

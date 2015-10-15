@@ -3,41 +3,39 @@
 
 <h1>Ledger</h1>
 
-<h2>Bloggers</h2>
+{% for info in party_info %}
+	{% if info['date'] %}
+	<h2>Party On {{ info['date'] | datestamp }}</h2>
+	{% else %}
+	<h2>Next Party</h2>
+	{% endif %}
+	{% if info['first_duedate'] %}
+	<p>Season started on {{ info['first_duedate'] | datestamp }}.</p>
+	{% endif %}
+	{% if info['last_duedate'] %}
+	<p>Season ended on {{ info['first_duedate'] | datestamp }}.</p>
+	{% endif %}
 
-<table class="table">
-	<tr>
-		<th>Blogger</th>
-		<th>Incurred</th>
-		<th>Paid</th>
-		<th>Owed</th>
-	</tr>
-	{% for blogger in bloggers %}
-	<tr>
-		<td>{{ blogger['name'] }}</td>
-		<td>{{ blogger['incurred'] | currency }}</td>
-		<td>{{ blogger['paid'] | currency}}</td>
-		<td>{{ blogger['owed'] | currency }}</td>
-	</tr>
-	{% endfor %}
-</table>
+	<h3>Bloggers</h3>
 
-<h2>Parties</h2>
+	<table class="table">
+		<tr>
+			<th>Blogger</th>
+			<th>Incurred</th>
+			<th>Paid</th>
+			<th>Owed</th>
+		</tr>
+		{% for blogger in info['bloggers'] %}
+		<tr>
+			<td>{{ blogger['name'] }}</td>
+			<td>{{ blogger['incurred'] | currency }}</td>
+			<td>{{ blogger['paid'] | currency}}</td>
+			<td>{{ blogger['owed'] | currency }}</td>
+		</tr>
+		{% endfor %}
+	</table>
 
-<table class="table">
-	<tr>
-		<th>Date</th>
-		<th>Spent</th>
-	</tr>
-	{% for party in parties %}
-	<tr>
-		<td>{{ party['date'] }}</td>
-		<td>{{ party['spent'] | currency }}</td>
-	</tr>
-	{% endfor %}
-</table>
-
-<p>Current Budget: {{ budget | currency }} ({{ collected | currency }}
-collected)</p>
-
+	<p>Budget: {{ info['total']['incurred'] | currency }} ({{ info['total']['paid'] | currency }}
+	collected)</p>
+{% endfor %}
 {% endblock %}
