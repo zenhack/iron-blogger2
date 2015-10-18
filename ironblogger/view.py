@@ -103,8 +103,12 @@ def build_ledger(start, stop):
         start = db.session.query(Blogger.start_date)\
             .order_by(Blogger.start_date.asc()).first()
         if start is None:
-            raise Exception("TODO: handle the case where there are no bloggers.")
-        start = start[0]
+            # It doesn't really matter what we put here, since there are no
+            # bloggers, and thus it won't affect the output, but it has to be
+            # *something* to avoid raising exceptions where it is used.
+            start = datetime.utcnow()
+        else:
+            start = start[0]
 
     if stop is None:
         stop = datetime.utcnow()
