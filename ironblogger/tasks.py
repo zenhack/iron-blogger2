@@ -86,7 +86,18 @@ def import_bloggers(file):
     yml = yaml.load(file)
     for blogger in yml.iteritems():
         name = blogger[0]
-        start_date = arrow.get(blogger[1]['start']).datetime
+
+        # We have to be careful when parsing the date (typically in
+        # YYYY-MM-DD form). If we just hand it off unmodified, it will be
+        # interpreted in UTC, but the file format requires local time.
+        # Otherwise, if the file indicates that a start date is on the first
+        # day of a round, and the local timezone is west of UTC, they will be
+        # entered as having started the previous day, and thus the previous
+        # week.
+        start_date = arrow.get(blogger[1]['start']).naive
+        start_date = arrow.get(start_date, app.config['IB2_TIMEZONE'])
+        start_date = start_date.to('UTC').datetime
+
         model = Blogger(name=name, start_date=start_date)
         for link in blogger[1]['links']:
             model.blogs.append(Blog(title=link[0],
