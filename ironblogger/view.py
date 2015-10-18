@@ -116,7 +116,9 @@ def build_ledger(start, stop):
     start = duedate(start)
     stop = duedate(stop)
     data = {'bloggers': []}
-    bloggers = db.session.query(Blogger).order_by(Blogger.name).all()
+    bloggers = db.session.query(Blogger)\
+        .filter(Blogger.start_date < to_dbtime(stop))\
+        .order_by(Blogger.name).all()
     total_paid = 0
     total_incurred = 0
     for blogger in bloggers:
