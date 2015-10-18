@@ -129,7 +129,7 @@ def build_ledger(start, stop):
                     Post.blog_id == Blog.id,
                     Blog.blogger_id == blogger.id)\
             .order_by(Post.counts_for.desc()).all()
-        num_rounds = divide_timedelta(stop - start, ROUND_LEN)
+        num_rounds = divide_timedelta(stop - first_duedate, ROUND_LEN)
         missed = num_rounds - len(posts)
         incurred = DEBT_PER_POST * missed
         for post in posts:
