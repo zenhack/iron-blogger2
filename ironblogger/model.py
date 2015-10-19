@@ -136,13 +136,13 @@ class Blog(db.Model):
         for post in feed_posts:
             # Check if the post is already in the db:
             if last_post is not None:
-                if post.timestamp < set_tz(last_post.timestamp):
+                if post.timestamp < last_post.timestamp:
                     # We can stop storing posts when we get to one that's older
                     # than one we already have. Note that we can't do less than
                     # or equal here, since someone might post more than one
                     # post in a day.
                     break
-                if post.timestamp != set_tz(last_post.timestamp):
+                if post.timestamp != last_post.timestamp:
                     continue
                 # If both the date and any of the below attributes match a post
                 # already in the db, we consider it to be the same post. Note
