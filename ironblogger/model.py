@@ -142,22 +142,28 @@ class Blog(db.Model):
                     # or equal here, since someone might post more than one
                     # post in a day.
                     break
-                if post.timestamp != last_post.timestamp:
+                if (post.timestamp == last_post.timestamp and
+                    # If both the date and any of the below attributes match a
+                    # post already in the db, we consider it to be the same
+                    # post. Note that guid can be NULL, so we need to check
+                    # for that.
+                    ((post.guid is not None and post.guid == last_post.guid) or
+                     post.title == last_post.title or post.page_url ==
+                     last_post.page_url)):
+
+                    # Override the information in the previous version:
+                    logging.info('Update existing post %r', post.page_url)
+                    last_post.title = post.title
+                    last_post.guid = post.guid
+                    last_post.page_url = post.page_url
+                    last_post.summary = post.summary
                     continue
-                # If both the date and any of the below attributes match a post
-                # already in the db, we consider it to be the same post. Note
-                # that guid can be NULL, so we need to check for that.
-                if ((post.guid is not None and post.guid == last_post.guid) or
-                        post.title == last_post.title or
-                        post.page_url == last_post.page_url):
-                    break
 
             post.blog = self
             db.session.add(post)
             logging.info('Added new post %r', post.page_url)
         self._update_caching_info(feed)
         db.session.commit()
-
 
     def _update_caching_info(self, feed):
         if hasattr(feed, 'etag'):
