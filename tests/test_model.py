@@ -23,5 +23,5 @@ def test_blogger_repr():
     """Verify that the blogger's repr is it's name.
 
     This is actually used in the UI, and so important."""
-    blogger = model.Blogger(name='bob', start_date=datetime.now())
+    blogger = model.Blogger(name='bob', start_date=datetime.utcnow())
     assert repr(blogger) == 'bob'
