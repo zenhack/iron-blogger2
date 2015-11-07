@@ -362,6 +362,13 @@ class Post(db.Model):
         # Assign the most recent round this post can count for.
         round = youngest
         while round >= oldest:
+
+            # If we cross a daylight savings time boundary, we need to adjust:
+            if duedate(round) < round:
+                round = duedate(round)
+            elif duedate(round) > round:
+                round = duedate(round - ROUND_LEN)
+
             if round not in dates:
                 self.counts_for = to_dbtime(round)
                 break
