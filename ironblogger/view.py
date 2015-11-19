@@ -286,6 +286,10 @@ def do_login():
 
 @app.route('/login', methods=['GET'])
 def show_login():
+    if app.config['IB2_FORCE_HTTPS_LOGIN'] and not request.is_secure:
+        return flask.redirect(url_for('show_login',
+                                      _external=True,
+                                      _scheme='https'))
     return render_template('login.html')
 
 

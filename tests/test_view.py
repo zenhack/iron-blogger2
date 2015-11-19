@@ -21,6 +21,19 @@ def test_root(client):
     # / should redirect us to /posts
     assert resp.status_code == 302
 
+
+def test_login(client):
+    # /login should redirect to https
+    resp = client.get('/login')
+    assert resp.status_code == 302
+    assert resp.headers['Location'][:len('https')] == 'https'
+    assert resp.headers['Location'][-len('/login'):] == '/login'
+
+    # accessing via https should work
+    resp = client.get('/login', environ_overrides={'wsgi.url_scheme': 'https'})
+    assert resp.status_code == 200
+
+
 pages = (
     '/posts',
     '/bloggers',
@@ -28,7 +41,6 @@ pages = (
     '/ledger',
     '/rss',
     '/about',
-    '/login',
 
     # Not on the main nav, but still.
     '/admin/',

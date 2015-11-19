@@ -7,6 +7,12 @@ application.config.update(
     IB2_REGION='Boston',
     IB2_TIMEZONE='US/Eastern',
     IB2_LANGUAGE='en-us',
+
+    # By default iron blogger will redirect requests for the login page to
+    # HTTPS. If you're running a local development server, you may want to turn
+    # this off:
+    # IB2_FORCE_HTTPS_LOGIN=False,
+
     # The database to use. Any SQLAlchemy URI can be used, but only SQLite and
     # postgresql have tested, and other DBMSes may not work:
     SQLALCHEMY_DATABASE_URI='sqlite:///' + os.getenv('PWD') + '/ib2.db',
