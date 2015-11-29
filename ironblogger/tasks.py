@@ -19,6 +19,8 @@ from os import path
 import ironblogger
 from .app import app
 from .model import Blogger, Blog, Post, User, MalformedPostError, db
+from .mail import mail
+from flask_mail import Message
 
 from alembic.config import Config
 from alembic import command
@@ -130,14 +132,34 @@ def export_bloggers(file):
     json.dump(result, file)
 
 
+def send_reminders():
+    text = (
+        "Greetings!\n"
+        "\n"
+        "Just a friendly reminder that this week's Iron Blogger deadline is\n"
+        "approaching. If you haven't posted this week already, you should\n"
+        "probably get on that!.\n"
+        "\n"
+        "Yours truly,\n"
+        "\n"
+        "Iron Blogger Robot\n"
+    )
+    recipients = [r[0] for r in db.session.query(Blogger.email).all()]
+    mail.send(Message(subject='Reminder: Iron Blogger post due Sunday!',
+                      bcc=recipients,
+                      body=text))
+
+
 def shell():
     """Launch a python interpreter.
 
     The CLI does this inside of an app context, so it's a convienent way to
-    play with the API.
+    play with the API. We also create an outbox for mail, so the user can
+    inspect it.
     """
-    import code
-    code.interact(local=locals())
+    with mail.record_messages() as outbox:
+        import code
+        code.interact(local=locals())
 
 
 def sync_posts():
