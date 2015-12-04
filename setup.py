@@ -23,7 +23,7 @@ setup(name='ironblogger',
       install_requires=[
           'Flask',
           'Flask-Admin',
-          'Flask-Login',
+          'Flask-Login>=0.3.2',
           'Flask-Mail',
           'Flask-SQLAlchemy',
           'feedparser==5.1.3',
