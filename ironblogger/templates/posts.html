@@ -8,6 +8,7 @@
 	<section>
 		{{ post.summary | safe }}
 	</section>
+	<p><a href="{{ post.page_url }}">Read entire post</a></p>
 </section>
 {% endfor %}
 {{ page.nav('show_posts', pageinfo) }}
