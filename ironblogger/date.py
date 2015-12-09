@@ -23,6 +23,25 @@ def in_localtime(dt):
     return arrow.get(set_tz(dt)).to(app.config['IB2_TIMEZONE']).datetime
 
 
+def dst_adjust(due):
+    """Adjust the duedate due to account for having crossed a DST boundary.
+
+    When performing calculations with due dates, it can be convienient to move
+    forward or back by adding/subtracting the length of a round. Unfortunately
+    crossing a DST boundary messes with this. if `due` is a duedate, possibly
+    skewed by 1 hour due to such computations, `dst_adjust(due)` is the
+    corrected due date.
+
+    This function should be used in most cases where arithemtic is being
+    performed with duedates.
+    """
+    if duedate(due) < due:
+        due = duedate(due)
+    elif duedate(due) > due:
+        due = duedate(due - ROUND_LEN)
+    return due
+
+
 def duedate(post_date):
     """The due date for which a post published on ``post_date`` counts.
 

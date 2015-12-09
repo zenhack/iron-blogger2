@@ -21,7 +21,8 @@ from passlib.hash import sha512_crypt
 import feedparser
 import jinja2
 
-from .date import duedate, ROUND_LEN, divide_timedelta, set_tz, to_dbtime
+from .date import duedate, ROUND_LEN, divide_timedelta, set_tz, to_dbtime, \
+    dst_adjust
 
 MAX_DEBT = 3000
 DEBT_PER_POST = 500
@@ -304,7 +305,8 @@ class Post(db.Model):
         return post
 
     def _oldest_valid_duedate(self):
-        ret = duedate(self.timestamp) - ROUND_LEN * (DEBT_PER_POST / LATE_PENALTY)
+        ret = dst_adjust(duedate(self.timestamp) -
+                         ROUND_LEN * (DEBT_PER_POST / LATE_PENALTY))
         ret = max(ret, duedate(self.blog.blogger.start_date))
 
         prev_party = self._prev_party()
@@ -362,13 +364,8 @@ class Post(db.Model):
         # Assign the most recent round this post can count for.
         round = youngest
         while round >= oldest:
-
             # If we cross a daylight savings time boundary, we need to adjust:
-            if duedate(round) < round:
-                round = duedate(round)
-            elif duedate(round) > round:
-                round = duedate(round - ROUND_LEN)
-
+            round = dst_adjust(round)
             if round not in dates:
                 self.counts_for = to_dbtime(round)
                 break
