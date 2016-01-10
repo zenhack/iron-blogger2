@@ -83,12 +83,12 @@ class Blogger(db.Model):
     # will take a bit of work.
     name       = db.Column(db.String,   nullable=False, unique=True)
     start_date = db.Column(db.DateTime, nullable=False)
+    email      = db.Column(db.String)
 
-    # These aren't currently really used by anything (and aren't displayed
-    # publicly), but useful for an administrator to keep track of who people are when it comes time to
-    # collect debts:
+    # This isn't currently really used by anything (and isn't displayed
+    # publicly), but is useful for an administrator to keep track of who
+    # people are when it comes time to collect debts:
     real_name = db.Column(db.String)
-    email     = db.Column(db.String)
 
     def __repr__(self):
         return self.name

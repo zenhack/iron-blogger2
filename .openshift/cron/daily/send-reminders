@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Openshift's "Cron" cartidge is substantially lighter on features than standard
+# cron implementations; you can only specify daily, weekly, hourly, etc. You
+# can't specify what time of day or what day of the week. So instead, we test on
+# startup if it's the right day, and if not exit immediately.
+#
+# Setting LC_ALL is important, since otherwise the date command might return a
+# name for the day of the week in a different language, which would break the
+# condition:
+export LC_ALL=POSIX
+if [ $(date +%A) != Friday ]; then
+	exit
+fi
+
+cd $OPENSHIFT_REPO_DIR
+ironblogger send-reminders

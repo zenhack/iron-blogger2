@@ -117,19 +117,29 @@ manually and so there is a low risk of data corruption. To use postgres,
 you'll need the additional python package `psycopg2`; read the comments
 in `setup.py` to learn how to set that up.
 
-## Syncing Posts & Bookkeeping
+## Background Jobs
 
-The recommended approach to keeping Iron Blogger's database up to date
-is to add the `ironblogger sync` command described above to a cron job.
-This must be run from the directory containing `wsgi.py`.
+There are a few periodic tasks that Iron Blogger needs to be done. In
+particular:
+
+* New posts need to be downloaded and assigned to rounds (`ironblogger
+  sync`).
+* If weekly notification emails are desired, they must be sent
+  (`ironblogger send-reminders`).
+
+All of these commands must be executed from the directory containing
+`wsgi.py`.
+
+The recommended approach is to put each of these in a cron job to
+execute at the proper time.
 
 ## Openshift
 
 Iron Blogger comes ready to run on [Openshift][6]. Have a look at
 `example-openshift.wsgi.py` for instructions. You'll need the postgres
 and cron cartridges installed. The scripts in the `.openshift` directory
-will take care of keeping the database up to date (new posts will be
-downloaded once per hour).
+will take care of keeping the database up to date. New posts will be
+downloaded once per hour, and reminders will be sent out on Fridays.
 
 # License
 
