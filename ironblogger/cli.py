@@ -1,4 +1,4 @@
-# Copyright 2014 Ian Denhardt <ian@zenhack.net>
+# Copyright 2014-2016 Ian Denhardt <ian@zenhack.net>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,52 +13,61 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>
 
+from argparse import ArgumentParser
 import sys
 
 from .tasks import *
 from .app import app
 
+commands = {
+    'init-db': dict(
+        fn=init_db,
+        help='initialize the database'),
+    'import': dict(
+        fn=lambda: import_bloggers(sys.stdin),
+        help='import bloggers from yaml file.'),
+    'export': dict(
+        fn=lambda: export_bloggers(sys.stdout),
+        help='export bloggers to yaml file.'),
+    'make-admin': dict(
+        fn=make_admin,
+        help='interactively create an admin user.'),
+    'serve': dict(
+        fn=lambda: app.run(debug=True),
+        help='start the app server (in debug mode).'),
+    'send-reminders': dict(
+        fn=send_reminders,
+        help='send reminder emails.'),
+    'shell': dict(
+        fn=shell,
+        help='start a python shell inside the app context.'),
+    'sync-posts': dict(
+        fn=sync_posts,
+        help='synchronize posts with blogs.'),
+    'assign-rounds': dict(
+        fn=assign_rounds,
+        help='assign posts to rounds.'),
+}
 
-def usage(exit_status=1):
-    usage = '\n'.join([
-        "Usage:",
-        "",
-        "    ironblogger init-db        # initialize the database.",
-        "    ironblogger import         # import bloggers from yaml file.",
-        "    ironblogger export         # export bloggers to yaml file.",
-        "    ironblogger make-admin     # interactively create an admin user.",
-        "    ironblogger serve          # start the app server (in debug mode).",
-        "    ironblogger send-reminders # send reminder emails.",
-        "    ironblogger shell          # start a python shell inside the app context.",
-        "    ironblogger sync-posts     # syncronize posts with blogs.",
-        "    ironblogger assign-rounds  # assign posts to rounds.",
-        "    ironblogger help           # show this help message.",
-        "    ironblogger help <command> # show detailed help for <command>.",
-    ])
-    print(usage)
-    sys.exit(exit_status)
+main_parser = ArgumentParser()
+
+subcommands_parser = main_parser.add_subparsers()
 
 
-def show_help(*args):
-    if len(args) == 0:
-        usage(0)
-    else:
-        print("command help not yet implemented")
+def mk_wrapper_fn(cmd):
+    def wrapper_fn(args):
+        with app.test_request_context():
+            commands[cmd]['fn']()
+    return wrapper_fn
+
+
+for cmd in commands.keys():
+    subp = subcommands_parser.add_parser(
+        cmd,
+        help=commands[cmd]['help'])
+    subp.set_defaults(func=mk_wrapper_fn(cmd))
 
 
 def main():
-    if len(sys.argv) < 2:
-        usage()
-    commands = {
-        'help': lambda: show_help(*sys.argv[2:]),
-        'init-db': init_db,
-        'import': lambda: import_bloggers(sys.stdin),
-        'export': lambda: export_bloggers(sys.stdout),
-        'make-admin': make_admin,
-        'serve': lambda: app.run(debug=True),
-        'send-reminders': send_reminders,
-        'shell': shell,
-        'sync-posts': sync_posts,
-        'assign-rounds': assign_rounds,
-    }
-    with_context(commands[sys.argv[1]])
+    args = main_parser.parse_args()
+    args.func(args)

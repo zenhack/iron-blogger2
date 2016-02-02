@@ -26,11 +26,6 @@ from alembic.config import Config
 from alembic import command
 
 
-def with_context(task):
-    with app.test_request_context():
-        task()
-
-
 def init_db():
     db.create_all()
     alembic_cfg = Config(path.join(
