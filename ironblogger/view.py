@@ -23,6 +23,7 @@ from .date import duedate, ROUND_LEN, divide_timedelta, set_tz, in_localtime, \
     to_dbtime
 from collections import defaultdict
 from datetime import datetime
+from sqlalchemy import and_, or_
 
 # We don't reference this anywhere else in this file, but we're importing it
 # for the side effect of defining the filters:
@@ -46,53 +47,119 @@ def render_template(*args, **kwargs):
 
 @app.route('/status')
 def show_status():
+    # We're going to build up a somewhat complex data structure describing the
+    # posting activity for the range of weeks corresponding to the page we've
+    # been asked to display. We construct it in stages, but the final data
+    # structure is formatted as follows:
+    #
+    # - A list of pairs `(due, info)`, sorted by `due`, where:
+    #   - `due` is datetime object in the local timezone, representing a
+    #     duedate.
+    #   - `info` is a list of dictionaries with two elements:
+    #     - 'missing-in-action', which is an (alphabetical) list of the
+    #       bloggers who did not post for the week with duedate `due`.
+    #     - 'posts', a list of dictionaries containing various information
+    #       about each post that was either posted during that week or counted
+    #       for that week. Note that late posts will appear in two places.
+    #
+    # Rough example:
+    #
+    # [ (duedate1, {
+    #       'missing-in-action: ['alice', 'bob'],
+    #       'posts': [{...}, {...}, {...}, ...],
+    #    }),
+    #   (duedate2, {
+    #       'missing-in-action': ['bob'],
+    #       'posts': [{...}, {...}, {...}, ...],
+    #    }),
+    #   ...
+    # ]
 
+
+    DEFAULT_PAGE_SIZE=5
+
+    # Find the first round:
     first_round = db.session.query(Blogger.start_date)\
         .order_by(Blogger.start_date.asc()).first()
-    current_round = duedate(datetime.utcnow())
     if first_round is None:
-        num_rounds = 0
-    else:
-        # SQLAlchemy returns a tuple of the rows
-        first_round = duedate(first_round[0])
-        num_rounds = divide_timedelta(current_round - first_round, ROUND_LEN)
-    pageinfo = _page_args(item_count=num_rounds, size=5)
+        # There aren't any rounds at all, so we're done:
+        return render_template('status.html',
+                               rounds=[],
+                               pageinfo=_page_args(item_count=0,
+                                                   size=DEFAULT_PAGE_SIZE))
+    # SQLAlchemy returns a tuple of the rows, so to actually get the date
+    # object, we need to extract it:
+    first_round = duedate(first_round[0])
+
+
+    # Find the the current round:
+    current_round = duedate(datetime.utcnow())
+
+
+    # Work out how many pages there are, and what the bounds of the current page
+    # are:
+    num_rounds = divide_timedelta(current_round - first_round, ROUND_LEN)
+    pageinfo = _page_args(item_count=num_rounds, size=DEFAULT_PAGE_SIZE)
     start_round = current_round - (ROUND_LEN * pageinfo['size'] * pageinfo['num'])
     stop_round  = start_round - (ROUND_LEN * pageinfo['size'])
 
-    all_bloggers = set([row [0]
-                        for row in db.session.query(Blogger.name).all()])
+    # Get a set of the names of all the bloggers. Same trick with the
+    # row/tuple.
+    all_bloggers = db.session.query(Blogger.name).all()
+    all_bloggers = set([row[0] for row in all_bloggers])
 
-    posts = db.session.query(Post)\
-        .filter(Post.blog_id == Blog.id,
-                Blog.blogger_id == Blogger.id,
-                Post.timestamp >= Blogger.start_date,
-                Post.counts_for <= start_round,
-                Post.counts_for > stop_round)\
-        .order_by(Post.timestamp.desc())
-    rounds = defaultdict(lambda: {
-        'posts': [],
-        'no-post': set(all_bloggers),
-    })
+    # Collect all of the posts we need to display. This includes (1) any post
+    # that counts for some round on the current page, and (2) any post which
+    # was published during one of those rounds AND does not count for *any*
+    # round (extra posts):
+    posts = db.session.query(Post).filter(or_(
+        # First case: post isn't being counted, but was published in the right
+        # time peroid:
+        and_(Post.counts_for == None,
+             Post.timestamp  <= start_round,
+             Post.timestamp  >  stop_round),
+        # Second case: Post counts for something in the right time period:
+        and_(Post.counts_for <= start_round,
+             Post.counts_for >  stop_round)
+    )).order_by(Post.timestamp.desc()).all()
+
+    # Massage the information about the posts into the format we're going to
+    # pass to the template. We accumulate the posts into one big list. we'll
+    # sort them into rounds shortly.
+    all_post_views = []
     for post in posts:
         post_view = {
-            'title': post.title,
+            'title'     : post.title,
             'page_url'  : post.page_url,
             'author'    : post.blog.blogger.name,
             'blog_title': post.blog.title,
             'blog_url'  : post.blog.page_url,
             'timestamp' : in_localtime(post.timestamp),
             'counts_for': in_localtime(post.counts_for),
-            'late?'     : duedate(post.timestamp) != set_tz(post.counts_for),
+            'late?'     : post.counts_for is not None and
+                duedate(post.timestamp) != duedate(post.counts_for),
+            'bonus?'    : post.counts_for is None,
         }
-        def _add_post(date):
-            rounds[date]['posts'].append(post_view)
-            rounds[date]['no-post'] -= set([post_view['author']])
-        _add_post(in_localtime(duedate(post.timestamp)))
-        if post_view['counts_for'] is not None and post_view['late?']:
-            _add_post(in_localtime(post.counts_for))
+        all_post_views.append(post_view)
+
+    # We're going to build up a dictionary mapping dates to lists of posts.
+    rounds = defaultdict(list)
+    for view in all_post_views:
+        rounds[in_localtime(duedate(view['timestamp']))].append(view)
+        if view['counts_for'] is not None and view['late?']:
+            rounds[view['counts_for']].append(view)
+
+    # Now add in information about what bloggers didn't post.
     for k in rounds.keys():
-        rounds[k]['no-post'] = sorted(rounds[k]['no-post'])
+        active = set([post['author'] for post in rounds[k]])
+        missing = all_bloggers.copy() - active
+        rounds[k] = {
+            'posts': rounds[k],
+            'missing-in-action': sorted(missing),
+        }
+
+    # Just before we pass the data into the template, we convert it to a
+    # (sorted) list of paris, so the weeks come out in order.
     return render_template('status.html',
                            rounds=sorted(rounds.iteritems(), reverse=True),
                            pageinfo=pageinfo)

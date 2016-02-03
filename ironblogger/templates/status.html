@@ -19,7 +19,7 @@
 		<td><a href="{{ post['blog_url'] }}">{{ post['blog_title'] }}</a></td>
 		<td>
 			{{ post['timestamp'] | timestamp_short }}
-			{% if post['counts_for'] == None %}
+			{% if post['bonus?'] %}
 			(Bonus!)
 			{% elif post['counts_for'] < duedate %}
 			(Late, counts for {{ post['counts_for'] | timestamp_short }})
@@ -31,7 +31,7 @@
 	{% endfor %}
 </table>
 	<h3>Missing in action:</h3>
-	<p>{{ ', '.join(round['no-post']) }}</p>
+	<p>{{ ', '.join(round['missing-in-action']) }}</p>
 {% endfor %}
 {{ page.nav('show_status', pageinfo) }}
 {% endblock %}
