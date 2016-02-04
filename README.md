@@ -13,7 +13,7 @@ For Debian/Ubuntu users, you may need to run sudo `apt-get install libxml2-dev l
 
 ###virtualenv
 
-Use of [virtualenv][1] is recommended for development. In this
+Use of [virtualenv][3] is recommended for development. In this
 directory, execute:
 
     virtualenv .venv
