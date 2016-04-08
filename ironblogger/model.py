@@ -344,7 +344,7 @@ class Post(db.Model):
     def _next_party(self):
         due = to_dbtime(duedate(self.timestamp))
         return db.session.query(Party)\
-            .filter(Party.first_duedate >= due)\
+            .filter(Party.first_duedate > due)\
             .order_by(Party.first_duedate.asc())\
             .first()
 
