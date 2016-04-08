@@ -313,7 +313,8 @@ class Post(db.Model):
         cur_party = self._cur_party()
 
         if prev_party is not None:
-            ret = max(ret, set_tz(prev_party.last_duedate) + ROUND_LEN)
+            ret = max(ret,
+                      dst_adjust(set_tz(prev_party.last_duedate) + ROUND_LEN))
         if cur_party is not None:
             ret = max(ret, set_tz(cur_party.first_duedate))
 
@@ -323,7 +324,8 @@ class Post(db.Model):
         ret = duedate(self.timestamp)
         next_party = self._next_party()
         if next_party is not None:
-            ret = min(ret, set_tz(next_party.first_duedate) - ROUND_LEN)
+            ret = min(ret,
+                      dst_adjust(set_tz(next_party.first_duedate) - ROUND_LEN))
         return ret
 
     def _prev_party(self):
