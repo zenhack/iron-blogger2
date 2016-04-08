@@ -359,7 +359,6 @@ class Post(db.Model):
                     Post.counts_for >= to_dbtime(oldest),
                     Post.blog_id == Blog.id,
                     Blog.blogger_id == self.blog.blogger.id)\
-            .order_by(Post.counts_for.desc())\
             .all()
         dates = set([set_tz(date[0]) for date in dates])
 
