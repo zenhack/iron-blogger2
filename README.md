@@ -142,3 +142,4 @@ its authors can be found in the file `AUTHORS`.
 [4]: https://raw.githubusercontent.com/paultag/iron-blogger/master/bloggers.yml
 [5]: https://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
 [6]: https://www.openshift.com/
+[7]: http://pytest.org/latest/
