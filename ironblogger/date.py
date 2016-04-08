@@ -67,17 +67,8 @@ def rssdate(date_obj):
     return arrow.get(date_obj).to(app.config['IB2_TIMEZONE']).strftime('%d %b %Y %T %z')
 
 
-def divide_timedelta(numerator, denominator):
-    """Divide two timedelta objects.
-
-    The timedelta type doesn't have it's own divide operator, which
-    is something we need in a few places.
-
-    Both numerator and denominator *must* be whole-second quantities.
-
-    The return value is of type int, not timedelta.
-    """
-    # total_seconds returns a floating point value, but for our purposes it's
-    # always going to be an integer, and we don't want to deal with precision
-    # errors, so we convert before dividing.
-    return int(numerator.total_seconds())/int(denominator.total_seconds())
+def round_diff(last, first):
+    """Return the number of rounds between two duedates."""
+    # The call to round() is necessary, since if the dates cross a dst
+    # boundary, it won't be a whole number of weeks.
+    return round((last - first).total_seconds()/ROUND_LEN.total_seconds())

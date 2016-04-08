@@ -21,7 +21,7 @@ from passlib.hash import sha512_crypt
 import feedparser
 import jinja2
 
-from .date import duedate, ROUND_LEN, divide_timedelta, set_tz, to_dbtime, \
+from .date import duedate, ROUND_LEN, round_diff, set_tz, to_dbtime, \
     dst_adjust
 
 MAX_DEBT = 3000
@@ -382,10 +382,4 @@ class Post(db.Model):
         if self.counts_for is None:
             return None
 
-        return divide_timedelta(duedate(self.timestamp) -
-                                # We need to give counts_for a timezone in
-                                # order to subtract it from duedate; logically
-                                # everything in the DB is UTC, but it doesn't
-                                # actualy store that.
-                                set_tz(self.counts_for),
-                                ROUND_LEN)
+        return round_diff(duedate(self.timestamp), set_tz(self.counts_for))

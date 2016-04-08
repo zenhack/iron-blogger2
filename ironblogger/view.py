@@ -19,7 +19,7 @@ from flask.ext.login import login_user, logout_user, login_required, LoginManage
 from .app import app
 from .model import db, Blogger, Blog, Post, Payment, Party, User
 from .model import DEBT_PER_POST, LATE_PENALTY, MAX_DEBT
-from .date import duedate, ROUND_LEN, divide_timedelta, set_tz, in_localtime, \
+from .date import duedate, ROUND_LEN, round_diff, set_tz, in_localtime, \
     to_dbtime, dst_adjust
 from collections import defaultdict
 from datetime import datetime
@@ -98,7 +98,7 @@ def show_status():
 
     # Work out how many pages there are, and what the bounds of the current page
     # are:
-    num_rounds = divide_timedelta(current_round - first_round, ROUND_LEN)
+    num_rounds = round_diff(current_round, first_round)
     pageinfo = _page_args(item_count=num_rounds, size=DEFAULT_PAGE_SIZE)
     start_round = current_round - (ROUND_LEN * pageinfo['size'] * pageinfo['num'])
     stop_round  = start_round - (ROUND_LEN * pageinfo['size'])
@@ -198,7 +198,7 @@ def build_ledger(start, stop):
                     Post.blog_id == Blog.id,
                     Blog.blogger_id == blogger.id)\
             .order_by(Post.counts_for.desc()).all()
-        num_rounds = divide_timedelta(stop - first_duedate, ROUND_LEN)
+        num_rounds = round_diff(stop, first_duedate)
         missed = num_rounds - len(posts)
         incurred = DEBT_PER_POST * missed
         for post in posts:
