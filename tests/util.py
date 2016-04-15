@@ -45,7 +45,7 @@ example_databases = [
                                     title="Javascript and timing attacks",
                                     summary="Owing to it being the only thing available in the "
                                             "browser, people are doing more and more with Javascript...",
-                                    page_url='http:///example.com/alice/javascript-timing-attacks.html',
+                                    page_url='http://example.com/alice/javascript-timing-attacks.html',
                                     ),
                                 ]
             )]),

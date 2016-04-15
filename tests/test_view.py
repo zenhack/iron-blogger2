@@ -3,6 +3,9 @@
 So far, we're only testing pages that we know should always return 200.
 """
 import pytest
+from lxml import etree
+from flask import url_for
+from urlparse import urlparse
 
 from ironblogger import tasks
 from ironblogger.app import app
@@ -35,6 +38,7 @@ def test_login(client):
 
 
 pages = (
+    '/',
     '/posts',
     '/bloggers',
     '/status',
@@ -50,8 +54,7 @@ pages = (
 @pytest.mark.parametrize('page', pages)
 def test_empty_db_ok(client, page):
     """Crawl the website with an empty database."""
-    resp = client.get(page)
-    assert resp.status_code == 200
+    assert_no_dead_links(client, page)
 
 
 @pytest.mark.parametrize('page,database', [(p, d)
@@ -66,12 +69,55 @@ def test_populated_db_page_ok(client, page, database):
     db.session.add(database())
     db.session.commit()
 
-    resp = client.get(page)
-    assert resp.status_code == 200
+    assert_no_dead_links(client, page)
 
     last_post = db.session.query(Post.timestamp)\
         .order_by(Post.timestamp.desc())\
         .first()[0]
     tasks.assign_rounds(until=last_post)
-    resp = client.get(page)
-    assert resp.status_code == 200
+
+    assert_no_dead_links(client, page)
+
+
+def is_internal_link(link):
+    root_url = urlparse(url_for('show_index', _external=True))
+    this_url = urlparse(link)
+    return this_url.netloc in ('', root_url.netloc)
+
+
+def assert_no_dead_links(client, path='/', visited=None):
+    if visited is None:
+        visited = set()
+
+    if path in visited or not is_internal_link(path):
+        # Don't need to visit this one.
+        return
+
+    visited.add(path)
+    resp = client.get(path)
+
+    assert 200 <= resp.status_code < 400, \
+        "Bad status code for page %r: %r" % (path, resp.status_code)
+
+    if resp.status_code >= 300:
+        assert_no_dead_links(client, resp.headers['Location'], visited=visited)
+    elif 'text/html' not in resp.headers['Content-Type']:
+        # No links to follow.
+        return
+    else:
+        parser = etree.HTMLParser()
+        html = etree.fromstring(resp.data, parser)
+        links = (
+            [elt.attrib['href'] for elt in
+             html.findall('.//a[@href]') +
+             html.findall('.//link[@href]')
+             ] +
+            [elt.attrib['src'] for elt in
+             html.findall('.//img[@src]') +
+             html.findall('.//script[@src]')
+             ]
+        )
+
+        for link in links:
+            if is_internal_link(link):
+                assert_no_dead_links(client, link, visited)
