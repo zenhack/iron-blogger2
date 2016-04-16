@@ -2,6 +2,8 @@ from ironblogger.app import app
 from ironblogger.wsgi import init_app
 from ironblogger.model import db, Blogger, Blog, Post
 from datetime import datetime
+import tempfile
+import os
 
 
 def fresh_context():
@@ -16,6 +18,26 @@ def fresh_context():
     with app.test_request_context():
         db.create_all()
         yield
+
+
+def feedtext_to_blog(feedtext):
+    """Convert the text of a feed to a blog object."""
+    with tempfile.NamedTemporaryFile(delete=False) as f:
+        name = f.name
+        f.write(feedtext)
+    try:
+        blogger = Blogger(name='Mr. Badguy', start_date=datetime(1973, 3, 17))
+        return Blog(
+            title='Test Blog',
+            page_url='http://www.example.com/blog',
+            feed_url=name,
+            blogger=blogger
+        )
+    except Exception:
+        # We *don't* want to remove the file if this succeeds; it will probably
+        # be used by the tests.
+        os.remove(name)
+        raise
 
 
 # Example databases; often useful. If we re-use existing objects the tests may

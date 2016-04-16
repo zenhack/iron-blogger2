@@ -3,13 +3,12 @@ from ironblogger import tasks
 from ironblogger.model import *
 import os.path
 import pytest
-import tempfile
 from lxml import etree
 from StringIO import StringIO
 
 from jinja2 import Template
 
-from tests.util import fresh_context
+from tests.util import fresh_context, feedtext_to_blog
 
 
 rss_feed_template = '''
@@ -83,28 +82,6 @@ malformed_posts = [
 ]
 
 
-def as_file(data):
-    with tempfile.NamedTemporaryFile(delete=False) as f:
-        name = f.name
-        f.write(data)
-    return name
-
-def to_blog(feedtext):
-    with tempfile.NamedTemporaryFile(delete=False) as f:
-        name = f.name
-        f.write(feedtext)
-    try:
-        blogger = Blogger(name='Mr. Badguy', start_date=date(1973, 3, 17))
-        return Blog(
-                title='Test Blog',
-                page_url='http://www.example.com/blog',
-                feed_url=name,
-                blogger=blogger)
-    except Exception:
-        os.remove(name)
-        raise
-
-
 def post_summary_etree(post):
     summary = StringIO('<section>%s</section>' % post.summary)
     parser = etree.HTMLParser()
@@ -116,7 +93,7 @@ fresh_context = pytest.yield_fixture(autouse=True)(fresh_context)
 
 @pytest.mark.parametrize('post', malformed_posts)
 def test_malformed(post):
-    blog = to_blog(rss_feed_template.render(items=[post]))
+    blog = feedtext_to_blog(rss_feed_template.render(items=[post]))
     try:
         with pytest.raises(MalformedPostError):
             blog.sync_posts()
@@ -126,7 +103,7 @@ def test_malformed(post):
 
 @pytest.mark.parametrize('post', malicious_posts)
 def test_malicious(post):
-    blog = to_blog(rss_feed_template.render(items=[post]))
+    blog = feedtext_to_blog(rss_feed_template.render(items=[post]))
     try:
         blog.sync_posts()
         tree = post_summary_etree(blog.posts[0])
@@ -175,7 +152,7 @@ def test_interrupt_sync():
             ],
     }
     for blogger_name in 'alice', 'mallory', 'bob':
-        blog = to_blog(rss_feed_template.render(items=blogs[blogger_name]))
+        blog = feedtext_to_blog(rss_feed_template.render(items=blogs[blogger_name]))
         blog.blogger = Blogger(name=blogger_name, start_date=date(1949, 10, 31))
         blogs[blogger_name] = blog
         db.session.add(blog)
@@ -206,7 +183,7 @@ def test_text_mimetype():
         &lt;p&gt;mwahahaha&lt;/p&gt;
     </summary>
     ''' % (pubdate, pubdate)
-    blog = to_blog(atom_feed_template.render(entries=[entry]))
+    blog = feedtext_to_blog(atom_feed_template.render(entries=[entry]))
 
     # Double check that the mime type -- the whole point of this test is plain
     # text.

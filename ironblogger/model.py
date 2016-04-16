@@ -143,14 +143,13 @@ class Blog(db.Model):
                     # or equal here, since someone might post more than one
                     # post in a day.
                     break
-                if (post.timestamp == last_post.timestamp and
-                    # If both the date and any of the below attributes match a
-                    # post already in the db, we consider it to be the same
-                    # post. Note that guid can be NULL, so we need to check
-                    # for that.
-                    ((post.guid is not None and post.guid == last_post.guid) or
+                if (
+                    # If any of the below attributes match a post already in
+                    # the db, we consider it to be the same post. Note that
+                    # guid can be NULL, so we need to check for that.
+                    (post.guid is not None and post.guid == last_post.guid) or
                      post.title == last_post.title or post.page_url ==
-                     last_post.page_url)):
+                     last_post.page_url):
 
                     # Override the information in the previous version:
                     logging.info('Update existing post %r', post.page_url)
