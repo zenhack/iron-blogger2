@@ -241,7 +241,7 @@ class Post(db.Model):
         for key in 'published', 'created', 'updated':
             key += '_parsed'
             if key in feed_entry and feed_entry[key] is not None:
-                return arrow.get(feed_entry[key]).to('UTC').datetime
+                return set_tz(feed_entry[key])
         raise MalformedPostError("No valid publication date in post: %r" %
                                  feed_entry)
 
