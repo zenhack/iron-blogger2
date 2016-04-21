@@ -61,11 +61,9 @@ reflects the roster of Boston-area participants the last time the
 original software was being used.
 
 Once the database is populated with bloggers/blogs, posts can be downloaded
-by running:
+and accounted for by running:
 
-    ironblogger sync-posts
-
-Then, `ironblogger assign-rounds` will update accounting information.
+    ironblogger sync
 
 ## Unit Tests
 
@@ -86,6 +84,9 @@ allows pytest to pick them up automatically.
   of a Flask request context, with an active database connection. This allows
   you to make calls to various parts of the code that don't otherwise work
   without a bit of setup.
+* The commands `ironblogger fetch-posts` and `ironblogger assign-rounds`
+  perform the downloading and bookkeeping steps of `ironblogger sync`,
+  respectively. Invoking them individually may be useful in some cases.
 * As of right now, while there's an admin panel available at `<main page
   url>/admin`, no users will exist by default. You can add one manually
   by dropping into the python shell using `ironblogger shell`, and running:
@@ -119,9 +120,8 @@ in `setup.py` to learn how to set that up.
 ## Syncing Posts & Bookkeeping
 
 The recommended approach to keeping Iron Blogger's database up to date
-is to add the `ironblogger sync-posts` and `ironblogger assign-rounds`
-commands described above to a cron job. These must be run from the
-directory containing `wsgi.py`.
+is to add the `ironblogger sync` command described above to a cron job.
+This must be run from the directory containing `wsgi.py`.
 
 ## Openshift
 

@@ -96,7 +96,7 @@ def test_malformed(post):
     blog = feedtext_to_blog(rss_feed_template.render(items=[post]))
     try:
         with pytest.raises(MalformedPostError):
-            blog.sync_posts()
+            blog.fetch_posts()
     finally:
         os.remove(blog.feed_url)
 
@@ -105,7 +105,7 @@ def test_malformed(post):
 def test_malicious(post):
     blog = feedtext_to_blog(rss_feed_template.render(items=[post]))
     try:
-        blog.sync_posts()
+        blog.fetch_posts()
         tree = post_summary_etree(blog.posts[0])
         assert len(tree.getroot().findall('.//p')) == 1
         assert len(tree.getroot().findall('.//script')) == 0
@@ -133,7 +133,7 @@ def test_interrupt_sync():
                  'pubDate': "You'll never sync the rest of the posts!",
                  'description': '''
                    You'll never sync the rest of the posts, because when
-                   sync_posts tries to parse the date in this one, you'll get a
+                   fetch_posts tries to parse the date in this one, you'll get a
                    MalformedPostError, and not sync the rest of the blogs!
 
                    Mwhahahaha!
@@ -157,7 +157,7 @@ def test_interrupt_sync():
         blogs[blogger_name] = blog
         db.session.add(blog)
 
-    tasks.sync_posts()
+    tasks.fetch_posts()
     assert len(blogs['alice'].posts) == 1
     assert len(blogs['mallory'].posts) == 0
     assert len(blogs['bob'].posts) == 1
@@ -191,7 +191,7 @@ def test_text_mimetype():
     assert feed.entries[0].summary_detail.type == 'text/plain'
 
     try:
-        blog.sync_posts()
+        blog.fetch_posts()
         summary = post_summary_etree(blog.posts[0])
         assert len(summary.getroot().findall('.//script')) == 0
     finally:

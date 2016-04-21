@@ -41,12 +41,15 @@ commands = {
     'shell': dict(
         fn=shell,
         help='start a python shell inside the app context.'),
-    'sync-posts': dict(
-        fn=sync_posts,
-        help='synchronize posts with blogs.'),
+    'fetch-posts': dict(
+        fn=fetch_posts,
+        help='fetch new posts from blogs'),
     'assign-rounds': dict(
         fn=assign_rounds,
         help='assign posts to rounds.'),
+    'sync': dict(
+        fn=sync,
+        help='Download new posts and update accounting.'),
 }
 
 main_parser = ArgumentParser()

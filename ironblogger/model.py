@@ -111,7 +111,7 @@ class Blog(db.Model):
         backref=db.backref('blogs', cascade='all, delete-orphan')
     )
 
-    def sync_posts(self):
+    def fetch_posts(self):
         logging.info('Syncing posts for blog %r by %r',
                      self.title,
                      self.blogger.name)

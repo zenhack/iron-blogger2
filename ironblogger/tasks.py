@@ -157,13 +157,23 @@ def shell():
         code.interact(local=locals())
 
 
-def sync_posts():
+def sync():
+    """Combination of fetch_posts() and assign_rounds().
+
+    Doing these in one transaction is the norm, so having a single
+    wrapper function is useful.
+    """
+    fetch_posts()
+    assign_rounds()
+
+
+def fetch_posts():
     """Download new posts"""
     logging.info('Syncing posts')
     blogs = db.session.query(Blog).all()
     for blog in blogs:
         try:
-            blog.sync_posts()
+            blog.fetch_posts()
         except MalformedPostError as e:
             logging.info('%s', e)
 

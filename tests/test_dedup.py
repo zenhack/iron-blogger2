@@ -56,7 +56,7 @@ changes = {
 def test_detect_change(to_keep):
     blog = feedtext_to_blog(feed_template.render(**original_post))
     db.session.add(blog)
-    blog.sync_posts()
+    blog.fetch_posts()
     assert Post.query.count() == 1, "Wrong number of posts on initial import"
 
     new_post = original_post.copy()
@@ -65,17 +65,17 @@ def test_detect_change(to_keep):
             new_post[key] = changes[key]
     with open(blog.feed_url, 'w') as f:
         f.write(feed_template.render(**new_post))
-    blog.sync_posts()
+    blog.fetch_posts()
     assert Post.query.count() == 1, "Post dedup failed"
 
 
 def test_no_dedup_new():
     blog = feedtext_to_blog(feed_template.render(**original_post))
     db.session.add(blog)
-    blog.sync_posts()
+    blog.fetch_posts()
     assert Post.query.count() == 1, "Wrong number of posts on initial import"
 
     with open(blog.feed_url, 'w') as f:
         f.write(feed_template.render(**changes))
-    blog.sync_posts()
+    blog.fetch_posts()
     assert Post.query.count() == 2, "New post was not counted correctly."
