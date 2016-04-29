@@ -20,7 +20,7 @@ from .app import app
 from .model import db, Blogger, Blog, Post, Payment, Party, User
 from .model import DEBT_PER_POST, LATE_PENALTY, MAX_DEBT
 from .date import duedate, ROUND_LEN, round_diff, set_tz, in_localtime, \
-    to_dbtime, dst_adjust
+    to_dbtime, duedate_seek
 from collections import defaultdict
 from datetime import datetime
 from sqlalchemy import and_, or_
@@ -237,7 +237,7 @@ def show_ledger():
         ledger['total']['spent'] = 0
         info.append(ledger)
     elif parties[0].last_duedate is not None:
-        ledger = build_ledger(dst_adjust(set_tz(parties[0].last_duedate) + ROUND_LEN), None)
+        ledger = build_ledger(duedate_seek(set_tz(parties[0].last_duedate), +1), None)
         ledger['date'] = None
         ledger['total']['spent'] = 0
         info.append(ledger)

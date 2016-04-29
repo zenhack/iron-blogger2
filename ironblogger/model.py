@@ -21,7 +21,7 @@ import jinja2
 
 from .app import db
 from .date import duedate, ROUND_LEN, round_diff, set_tz, to_dbtime, \
-    dst_adjust
+    duedate_seek
 
 MAX_DEBT = 3000
 DEBT_PER_POST = 500
@@ -301,16 +301,15 @@ class Post(db.Model):
         return post
 
     def _oldest_valid_duedate(self):
-        ret = dst_adjust(duedate(self.timestamp) -
-                         ROUND_LEN * (DEBT_PER_POST / LATE_PENALTY))
+        ret = duedate_seek(duedate(self.timestamp),
+                           -(DEBT_PER_POST / LATE_PENALTY))
         ret = max(ret, duedate(self.blog.blogger.start_date))
 
         prev_party = self._prev_party()
         cur_party = self._cur_party()
 
         if prev_party is not None:
-            ret = max(ret,
-                      dst_adjust(set_tz(prev_party.last_duedate) + ROUND_LEN))
+            ret = max(ret, duedate_seek(set_tz(prev_party), last_duedate, +1))
         if cur_party is not None:
             ret = max(ret, set_tz(cur_party.first_duedate))
 
@@ -320,8 +319,7 @@ class Post(db.Model):
         ret = duedate(self.timestamp)
         next_party = self._next_party()
         if next_party is not None:
-            ret = min(ret,
-                      dst_adjust(set_tz(next_party.first_duedate) - ROUND_LEN))
+            ret = min(ret, duedate_seek(set_tz(next_party.first_duedate), -1))
         return ret
 
     def _prev_party(self):
@@ -361,12 +359,10 @@ class Post(db.Model):
         # Assign the most recent round this post can count for.
         round = youngest
         while round >= oldest:
-            # If we cross a daylight savings time boundary, we need to adjust:
-            round = dst_adjust(round)
             if round not in dates:
                 self.counts_for = to_dbtime(round)
                 break
-            round -= ROUND_LEN
+            round = duedate_seek(round, -1)
 
     def rounds_late(self):
         """How late is this post (in weeks)?
