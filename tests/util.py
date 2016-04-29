@@ -1,11 +1,16 @@
 from ironblogger.app import app
-from ironblogger.wsgi import init_app
 from ironblogger.model import db, Blogger, Blog, Post
 from ironblogger.date import to_dbtime
 from datetime import datetime
 from random import Random
 import tempfile
 import os
+
+# The wsgi module centralizes any side-effecting module imports necessary for
+# the operation of the app. We import it here for these side effects, and use
+# it in a noop statement below to silence the unused import warnings.
+import ironblogger.wsgi
+ironblogger.wsgi
 
 
 def fresh_context():
@@ -16,10 +21,10 @@ def fresh_context():
         SQLALCHEMY_DATABASE_URI='sqlite:///:memory:',
         SECRET_KEY='CHANGEME',
     )
-    init_app()
     with app.test_request_context():
         db.create_all()
         yield
+        db.drop_all()
 
 
 def feedtext_to_blog(feedtext):

@@ -28,5 +28,3 @@ application.config.update(
     # IB2_TIMESTAMP_LONG="%A %B %d, %Y at %I:%M %P",
     # IB2_TIMESTAMP_SHORT="%a %b %d, %I:%M %P",
 )
-
-init_app()

@@ -12,15 +12,14 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>
-import arrow
 import logging
 
-from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.login import UserMixin
 from passlib.hash import sha512_crypt
 import feedparser
 import jinja2
 
+from .app import db
 from .date import duedate, ROUND_LEN, round_diff, set_tz, to_dbtime, \
     dst_adjust
 
@@ -32,8 +31,6 @@ feedparser.USER_AGENT = \
         'IronBlogger/git ' + \
         '+https://github.com/zenhack/iron-blogger2 ' + \
         feedparser.USER_AGENT
-
-db = SQLAlchemy()
 
 
 class MalformedPostError(Exception):

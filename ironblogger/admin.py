@@ -1,6 +1,6 @@
-from flask.ext.admin import Admin, BaseView, expose
 from flask.ext.admin.contrib.sqla import ModelView
 from flask.ext import login
+from .app import admin
 
 from . import model
 from .currency import format_usd
@@ -46,7 +46,6 @@ class PartyView(AdminModelView):
     }
 
 
-admin = Admin()
 admin.add_view(UserView(model.User, model.db.session))
 admin.add_view(BloggerView(model.Blogger, model.db.session))
 admin.add_view(BlogView(model.Blog, model.db.session))

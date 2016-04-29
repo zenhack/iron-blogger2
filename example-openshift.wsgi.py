@@ -34,5 +34,3 @@ application.config.update(
     #   dd if=/dev/random bs=1 count=128 | base64
     # SECRET_KEY='CHANGEME',
 )
-
-init_app()

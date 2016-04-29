@@ -13,7 +13,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>
 import flask
+from flask_admin import Admin
+from flask_mail import Mail
+from flask_sqlalchemy import SQLAlchemy
+
+# Do the setup of our app and all of our flask extensions here; this
+# makes it much easier to avoid circular dependencies in the other modules.
 app = flask.Flask(__name__)
+admin = Admin(app)
+db = SQLAlchemy(app)
+mail = Mail(app)
+
 
 app.config.update(
     # defaults:
