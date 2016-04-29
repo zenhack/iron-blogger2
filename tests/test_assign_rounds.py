@@ -59,3 +59,47 @@ class Test_assign_rounds(unittest.TestCase):
 
         # Just make sure this doesn't explode:
         tasks.assign_rounds()
+
+    def test_enter_dst(self):
+        # This is a regression test for bug #51, fixed in commit
+        # 90d25c748fe74eb66630c867c956b88afbf2c6ba.
+        # For reference, DST for 2016 in Boston ends Sunday November 6th.
+
+        posts = [
+            Post(
+                title="DST: the end is neigh",
+                timestamp=datetime(2016, 11, 4),
+                summary="This is going to cause so many bugs.",
+                page_url="http://example.com/alice/dst-the-end-is-neigh.html",
+            ),
+            Post(
+                title="DST is over!",
+                timestamp=datetime(2016, 11, 8),
+                summary="Oh wow, nothing broke. that's a relief",
+                page_url="http://example.com/alice/dst-is-over.html",
+            ),
+            Post(
+                title="Maybe I'll push my luck...",
+                timestamp=datetime(2016, 11, 9),
+                summary="by posting twice right after the changeover.",
+                page_url="http://example.com/alice/push-my-luck.html",
+            )
+        ]
+
+        db.session.add(
+            Blogger(name='Alice',
+                    start_date=datetime(2016, 11, 3),
+                    blogs=[
+                        Blog(
+                            title="Timezones are Horrible",
+                            page_url="http://example.com/alice/blog.html",
+                            feed_url="http://example.com/alice/rss.xml",
+                            posts=posts
+                        )
+                    ]))
+
+        end_date = datetime(2016, 11, 14)
+        tasks.assign_rounds(until=end_date)
+        self.verify_assignment(datetime(2016, 11, 5), "neigh", 0)
+        self.verify_assignment(datetime(2016, 11, 10), "over",  0)
+        assert posts[2].counts_for is None
