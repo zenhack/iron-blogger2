@@ -37,46 +37,36 @@ def test_login(client):
     assert resp.status_code == 200
 
 
-pages = (
+# Starting points for crawling the site.
+root_pages = (
     '/',
-    '/posts',
-    '/bloggers',
-    '/status',
-    '/ledger',
-    '/rss',
-    '/about',
-
-    # Not on the main nav, but still.
     '/admin/',
 )
 
 
-@pytest.mark.parametrize('page', pages)
-def test_empty_db_ok(client, page):
+def test_empty_db_ok(client):
     """Crawl the website with an empty database."""
-    assert_no_dead_links(client, page)
+    assert_no_dead_links(client)
 
 
-@pytest.mark.parametrize('page,database', [(p, d)
-                                           for p in pages
-                                           for d in example_databases])
-def test_populated_db_page_ok(client, page, database):
+@pytest.mark.parametrize('database', example_databases)
+def test_populated_db_page_ok(client, database):
     """Crawl the website with a populated database.
 
-    This tests checks each page both before and after assigning rounds
+    This tests checks the site both before and after assigning rounds
     to posts.
     """
     db.session.add(database())
     db.session.commit()
 
-    assert_no_dead_links(client, page)
+    assert_no_dead_links(client)
 
     last_post = db.session.query(Post.timestamp)\
         .order_by(Post.timestamp.desc())\
         .first()[0]
     tasks.assign_rounds(until=last_post)
 
-    assert_no_dead_links(client, page)
+    assert_no_dead_links(client)
 
 
 def is_internal_link(link):
@@ -85,9 +75,12 @@ def is_internal_link(link):
     return this_url.netloc in ('', root_url.netloc)
 
 
-def assert_no_dead_links(client, path='/', visited=None):
+def assert_no_dead_links(client, path=None, visited=None):
     if visited is None:
         visited = set()
+    if path is None:
+        for path in root_pages:
+            assert_no_dead_links(client, path, visited)
 
     if path in visited or not is_internal_link(path):
         # Don't need to visit this one.
