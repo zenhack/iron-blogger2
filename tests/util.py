@@ -1,7 +1,9 @@
 from ironblogger.app import app
 from ironblogger.wsgi import init_app
 from ironblogger.model import db, Blogger, Blog, Post
+from ironblogger.date import to_dbtime
 from datetime import datetime
+from random import Random
 import tempfile
 import os
 
@@ -38,6 +40,43 @@ def feedtext_to_blog(feedtext):
         # be used by the tests.
         os.remove(name)
         raise
+
+
+def random_database(seed, now):
+    """Generate a random database based on random seed `seed`.
+
+    This expects to be run within an application context; after the call the
+    objects will be stored in the associated datbase.
+
+    Note that this function does not commit the changes to the database; the
+    caller must do that themselves.
+    """
+    rand = Random(seed)
+
+    blogger_choices = ['Alice', 'Bob', 'Cindy', 'Dave', 'Eve', 'Fred', 'Gina',
+                       'Henry', 'Isabelle', 'Joe', 'Kate', 'Larry', 'Mallory',
+                       'Nina', 'Owen', 'Patty', 'Quentin', 'Ron', 'Sarah',
+                       'Tim', 'Uwe', 'Vincent', 'Wendy', 'Xavier', 'Yolanda',
+                       'Zack']
+
+    num_bloggers = rand.randint(0, len(blogger_choices) - 1)
+    blogger_names = rand.sample(blogger_choices, num_bloggers)
+
+    first_start_date = now.replace(weeks=-8)
+    last_start_date = now.replace(weeks=+8)
+    for name in blogger_names:
+        start_date = random_arrow(first_start_date, last_start_date)
+        db.session.add(Blogger(name=name,
+                               start_date=to_dbtime(start_date)))
+
+
+def random_arrow(rand, start, end):
+    """Generate a random arrow object in the range [start,end].
+
+    `rand` is an instance of `Random`.
+    """
+    offset = rand.randint(0, (end - start).total_seconds())
+    return start.replace(seconds=offset)
 
 
 # Example databases; often useful. If we re-use existing objects the tests may
