@@ -38,15 +38,9 @@ def test_login(client):
 
 
 # Starting points for crawling the site.
-root_pages = (
-    '/',
-    '/admin/',
-)
-
-
 def test_empty_db_ok(client):
     """Crawl the website with an empty database."""
-    assert_no_dead_links(client)
+    assert_no_dead_links_site(client)
 
 
 @pytest.mark.parametrize('database', example_databases)
@@ -59,14 +53,14 @@ def test_populated_db_page_ok(client, database):
     db.session.add(database())
     db.session.commit()
 
-    assert_no_dead_links(client)
+    assert_no_dead_links_site(client)
 
     last_post = db.session.query(Post.timestamp)\
         .order_by(Post.timestamp.desc())\
         .first()[0]
     tasks.assign_rounds(until=last_post)
 
-    assert_no_dead_links(client)
+    assert_no_dead_links_site(client)
 
 
 def is_internal_link(link):
@@ -75,15 +69,56 @@ def is_internal_link(link):
     return this_url.netloc in ('', root_url.netloc)
 
 
-def assert_no_dead_links(client, path=None, visited=None):
-    if visited is None:
-        visited = set()
-    if path is None:
-        for path in root_pages:
-            assert_no_dead_links(client, path, visited)
+def find_all_links(page_text):
+    """Return all of the links in `page_text`.
 
-    if path in visited or not is_internal_link(path):
-        # Don't need to visit this one.
+    `page_text` is the text of an html document.
+
+    We reterun the `href` attributes of all `a` and `link` tags, and the `src`
+    attributes of all `img` and `script` tags. Additions to this list are
+    welcome.
+    """
+    parser = etree.HTMLParser()
+    html = etree.fromstring(page_text, parser)
+    return (
+        [elt.attrib['href'] for elt in
+         html.findall('.//a[@href]') +
+         html.findall('.//link[@href]')
+         ] +
+        [elt.attrib['src'] for elt in
+         html.findall('.//img[@src]') +
+         html.findall('.//script[@src]')
+         ]
+    )
+
+
+def assert_no_dead_links_site(client):
+    """Crawl the website looking for dead links, assert their abscence.
+
+    This function uses `client` to crawl the iron blogger website, (both
+    the public site and the admin interface). If any internal link it attempts
+    to follow returns non-success non-redirect status, this causes a test
+    failure.
+    """
+    visited = set()
+    # We need to start the search at *both* the root *and* /admin, because
+    # the latter isn't actually reachable from the landing page.
+    for start in '/', '/admin/':
+        _assert_no_dead_links_page(client, start, visited)
+
+
+def _assert_no_dead_links_page(client, path, visited):
+    """Helper for assert_no_dead_links_site.
+
+    Recursively checks the page at `path`. `visited` is a set of all
+    links that have already been followed. If `path` is in `visited` or
+    `path` is an external link, it is skipped.
+    """
+    if path in visited:
+        # Already been here; do nothing
+        return
+    if not is_internal_link(path):
+        # This goes outside our website; we don't test for that.
         return
 
     visited.add(path)
@@ -93,24 +128,12 @@ def assert_no_dead_links(client, path=None, visited=None):
         "Bad status code for page %r: %r" % (path, resp.status_code)
 
     if resp.status_code >= 300:
-        assert_no_dead_links(client, resp.headers['Location'], visited=visited)
-    elif 'text/html' not in resp.headers['Content-Type']:
-        # No links to follow.
-        return
-    else:
-        parser = etree.HTMLParser()
-        html = etree.fromstring(resp.data, parser)
-        links = (
-            [elt.attrib['href'] for elt in
-             html.findall('.//a[@href]') +
-             html.findall('.//link[@href]')
-             ] +
-            [elt.attrib['src'] for elt in
-             html.findall('.//img[@src]') +
-             html.findall('.//script[@src]')
-             ]
-        )
-
-        for link in links:
+        # Redirect
+        _assert_no_dead_links_page(client,
+                                   resp.headers['Location'],
+                                   visited)
+    elif 'text/html' in resp.headers['Content-Type']:
+        # We only want to scan the page if it's actually html
+        for link in find_all_links(resp.data):
             if is_internal_link(link):
-                assert_no_dead_links(client, link, visited)
+                _assert_no_dead_links_page(client, link, visited)
