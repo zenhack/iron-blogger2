@@ -70,7 +70,7 @@ def random_database(seed, now):
     first_start_date = now.replace(weeks=-8)
     last_start_date = now.replace(weeks=+8)
     for name in blogger_names:
-        start_date = random_arrow(first_start_date, last_start_date)
+        start_date = random_arrow(rand, first_start_date, last_start_date)
         db.session.add(Blogger(name=name,
                                start_date=to_dbtime(start_date)))
 

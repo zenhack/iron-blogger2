@@ -6,11 +6,13 @@ import pytest
 from lxml import etree
 from flask import url_for
 from urlparse import urlparse
+import arrow
 
 from ironblogger import tasks
 from ironblogger.app import app
 from ironblogger.model import db, Post
-from .util import fresh_context, example_databases
+from ironblogger.date import to_dbtime
+from .util import fresh_context, example_databases, random_database
 fresh_context = pytest.yield_fixture(autouse=True)(fresh_context)
 
 
@@ -60,6 +62,23 @@ def test_populated_db_page_ok(client, database):
         .first()[0]
     tasks.assign_rounds(until=last_post)
 
+    assert_no_dead_links_site(client)
+
+
+@pytest.mark.randomize(seed=int)
+def test_random_db_ok(client, seed):
+    """Crawl the website with a randomized database.
+
+    This tests checks the site both before and after assigning rounds
+    to posts.
+    """
+    now = arrow.now()
+    random_database(seed, now)
+    db.session.commit()
+    assert_no_dead_links_site(client)
+
+    tasks.assign_rounds(until=to_dbtime(now))
+    db.session.commit()
     assert_no_dead_links_site(client)
 
 
