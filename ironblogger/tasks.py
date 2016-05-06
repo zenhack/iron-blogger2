@@ -42,7 +42,11 @@ def assign_rounds(since=None, until=None):
         until = datetime.utcnow()
     if since is None:
         since = db.session.query(Blogger.start_date)\
-                          .order_by(Blogger.start_date).first()[0]
+                          .order_by(Blogger.start_date).first()
+    if since is None:
+        # If this is *still* true, there are no bloggers in the database; we're
+        # done!
+        return
 
     posts = db.session.query(Post)\
         .filter(Post.counts_for == None,
