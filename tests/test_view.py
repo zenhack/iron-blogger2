@@ -12,7 +12,9 @@ from ironblogger import tasks
 from ironblogger.app import app
 from ironblogger.model import db, Post
 from ironblogger.date import to_dbtime
-from .util import fresh_context, example_databases, random_database
+from .util.example_data import databases as example_databases
+from .util.randomize import random_database
+from .util import fresh_context
 fresh_context = pytest.yield_fixture(autouse=True)(fresh_context)
 
 

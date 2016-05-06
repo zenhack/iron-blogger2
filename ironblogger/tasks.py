@@ -43,10 +43,12 @@ def assign_rounds(since=None, until=None):
     if since is None:
         since = db.session.query(Blogger.start_date)\
                           .order_by(Blogger.start_date).first()
-    if since is None:
-        # If this is *still* true, there are no bloggers in the database; we're
-        # done!
-        return
+        if since is None:
+            # If this is *still* true, there are no bloggers in the database;
+            # we're done!
+            return
+        # Rows are returned as tuples; we want the raw value:
+        since = since[0]
 
     posts = db.session.query(Post)\
         .filter(Post.counts_for == None,

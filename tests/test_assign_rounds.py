@@ -1,7 +1,8 @@
 from datetime import datetime
 import unittest
 import pytest
-from tests.util import fresh_context, example_databases
+from .util import fresh_context
+from .util.example_data import databases as example_databases
 
 from ironblogger.model import db, Blogger, Blog, Post
 from ironblogger.app import app
