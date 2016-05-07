@@ -1,5 +1,4 @@
 """This package provides helpers for randomzied testsing."""
-from random import Random
 from urllib import quote
 from ironblogger.app import db
 from ironblogger.model import Blogger, Blog, Post
@@ -58,8 +57,8 @@ word_choices = [
 ]
 
 
-def random_database(seed, now):
-    """Generate a random database based on random seed `seed`.
+def random_database(rand, now):
+    """Generate a random database based on random number generator rand
 
     This expects to be run within an application context; after the call the
     objects will be stored in the associated datbase.
@@ -67,8 +66,6 @@ def random_database(seed, now):
     Note that this function does not commit the changes to the database; the
     caller must do that themselves.
     """
-    rand = Random(seed)
-
     num_bloggers = rand.randint(0, len(blogger_choices) - 1)
     blogger_names = rand.sample(blogger_choices, num_bloggers)
 

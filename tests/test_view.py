@@ -7,6 +7,7 @@ from lxml import etree
 from flask import url_for
 from urlparse import urlparse
 import arrow
+from random import Random
 
 from ironblogger import tasks
 from ironblogger.app import app
@@ -75,7 +76,7 @@ def test_random_db_ok(client, seed):
     to posts.
     """
     now = arrow.now()
-    random_database(seed, now)
+    random_database(Random(seed), now)
     db.session.commit()
     assert_no_dead_links_site(client)
 
