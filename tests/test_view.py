@@ -5,6 +5,7 @@ So far, we're only testing pages that we know should always return 200.
 import pytest
 from lxml import etree
 from flask import url_for
+from werkzeug.exceptions import BadRequest, NotFound
 from urlparse import urlparse
 import arrow
 from random import Random
@@ -13,6 +14,7 @@ from ironblogger import tasks
 from ironblogger.app import app
 from ironblogger.model import db, Post
 from ironblogger.date import to_dbtime
+from ironblogger.view import _page_args
 from .util.example_data import databases as example_databases
 from .util.randomize import random_database, random_ncalls
 from .util import fresh_context
@@ -22,6 +24,46 @@ fresh_context = pytest.yield_fixture(autouse=True)(fresh_context)
 @pytest.fixture
 def client():
     return app.test_client()
+
+
+class Test_page_args(object):
+    """Test the _page_args function.
+
+    We don't apply our custom ncalls to the randomized tests here; there
+    just aren't enough inputs to bother. It would just be a waste of CPU
+    time.
+    """
+
+    def test_non_int_num(self):
+        """Non-integer page num should raise a 400."""
+        with pytest.raises(BadRequest):
+            _page_args(25, num='potato')
+
+    def test_non_int_size(self):
+        """Non-integer page_size should raise a 400."""
+        with pytest.raises(BadRequest):
+            _page_args(25, size='potato')
+
+    @pytest.mark.randomize(size=int, min_num=-10, max_num=0)
+    def test_illegal_size_not_found(self, size):
+        """Non-positive page size should return 404."""
+        with pytest.raises(NotFound):
+            _page_args(25, size=size)
+
+    @pytest.mark.randomize(num=int, min_num=-10, max_num=-1)
+    def test_illegal_page_num_not_found(self, num):
+        """Negative page num should return 404."""
+        with pytest.raises(NotFound):
+            _page_args(25, num=num)
+
+    @pytest.mark.randomize(over_by=int, min_num=1, max_num=10)
+    def test_past_last_page_not_found(self, over_by):
+        """Pages past the last are not found."""
+        num_pages = 5
+        page_size = 5
+        num_values = num_pages * page_size
+        with pytest.raises(NotFound):
+            _page_args(num_values, size=page_size, num=num_values + over_by)
 
 
 def test_root(client):
@@ -89,7 +131,6 @@ def test_random_db_ok(client, seed):
     _assert_no_dead_links_page(client,
                                '/?page=1&page_size=%d' % page_size,
                                set())
-
 
 
 def is_internal_link(link):
