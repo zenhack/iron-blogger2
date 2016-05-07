@@ -1,12 +1,26 @@
 """This module provides example data to use in tests.
 
-Right now this contains just the variable `databases`, which i a list of
-callables, each of which takes no arguments and returns an object which may
-be added to the database with `db.session.add`. Doing so will pull in the rest
-of the sample database's objects via dependency.
+Right now this contains:
+* the variable `databases`, which i a list of callables, each of which takes
+  no arguments and returns an object which may be added to the database with
+  `db.session.add`. Doing so will pull in the rest of the sample database's
+  objects via dependency.
+* the variables malcious_posts, malformed_posts, and good_posts, each of
+  which is a list of dictionaries of the form::
 
-NOTE WELL: some of the tests depend on specific knowledge of the contents of,
-these databases, so they should not be changed willy-nilly.
+    {
+        'title': <Post title>,
+        'link': <link to post>,
+        'pubDate': <date, as a string>,
+        'description': <description/summary of the post>,
+    },
+
+  ...the fields being named for their element names in RSS. As the name
+  implies, malformed_posts contains some values which aren't actually valid
+  (e.g. badly formatted dates).
+
+NOTE WELL: some of the tests depend on specific knowledge of the details of
+these values, so they should not be changed willy-nilly.
 """
 from ironblogger.model import Blogger, Blog, Post
 from datetime import datetime
@@ -80,4 +94,62 @@ databases = [
                                     ),
                             ]
             )]),
+]
+
+
+def _format_date(date_obj):
+    """This is basically rssdate, but with a hard-coded timezone.
+
+    rssdate gets the timezone from flask's config, which won't be available
+    at import time, so we use this in the datasets below.
+    """
+    return date_obj.strftime('%d %b %Y %T -0500')
+
+
+malicious_posts = [
+    {'title': 'script in summary',
+     'link': 'script-in-summary.html',
+     'pubDate': _format_date(datetime(2014, 12, 26)),
+     'description': '''
+        <script>doBadThings();</script>
+        <p>mwahahaha</p>
+     '''},
+]
+
+malformed_posts = [
+    {
+        'title': 'Post with bad date',
+        'link': 'post-with-bad-date.html',
+        'pubDate': 'never',
+        'description': "Hello, World!\n",
+    },
+    {
+        'title': 'mwahahaha',
+        'link': 'mwhahahah.html',
+        'pubDate': "You'll never sync the rest of the posts!",
+        'description': '''
+        You'll never sync the rest of the posts, because when
+        fetch_posts tries to parse the date in this one, you'll get a
+        MalformedPostError, and not sync the rest of the blogs!
+
+        Mwhahahaha!
+        ''',
+    },
+]
+
+good_posts = [
+    {
+        'title': 'Diffie-Hellman FTW.',
+        'link': 'diffe-hellman.html',
+        'pubDate': _format_date(datetime(1976, 12, 4)),
+        'description': 'Neat paper that just came out...',
+    },
+    {'title': 'Perfect forward secrecy is pretty cool.',
+        'link': 'perfect-forward-secrecy.html',
+        'pubDate': _format_date(datetime(2014, 12, 30)),
+        'description': '''
+        OTR does a good job with this. Too bad it's hard to do with
+        something like email, where there's no "session."
+        ''',
+    }
 ]

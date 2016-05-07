@@ -1,4 +1,5 @@
-from datetime import date
+from datetime import datetime
+from ironblogger.date import rssdate
 from ironblogger import tasks
 from ironblogger.model import *
 import os.path
@@ -6,89 +7,21 @@ import pytest
 from lxml import etree
 from StringIO import StringIO
 
-from jinja2 import Template
+from tests.util import fresh_context
 
-from tests.util import fresh_context, feedtext_to_blog
-
-
-rss_feed_template = '''
-<?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0">
-    <channel>
-        <title>Blackhat posts</title>
-        <link>index.html</link>
-        <description>Posts that will exploit your app</description>
-        <language>en-us</language>
-
-        {% for item in items %}
-        <item>
-            <title>{{ item['title'] }}</title>
-            <link>{{ item['link'] }}</link>
-            <pubDate>{{ item['pubDate'] }}</pubDate>
-            <description>
-            {{ item['description'] }}
-            </description>
-        </item>
-        {% endfor %}
-    </channel>
-</rss>
-'''
-
-atom_feed_template = '''
-<?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom">
-    <title>Blackhat posts</title>
-    <link>index.html</link>
-    <updated>2015-01-01T2030:02Z</updated>
-    <author>
-      <name>Mr. Badguy</name>
-    </author>
-    <id>urn:uuid:ff34221c-6624-42da-86a3-d512537170d1</id>
-    {% for entry in entries %}
-    <entry>
-        {{ entry }}
-    </entry>
-    {% endfor %}
-</feed>
-'''
-
-rss_feed_template = Template(rss_feed_template, autoescape=False)
-atom_feed_template = Template(atom_feed_template, autoescape=False)
+from tests.util.example_data import \
+    malicious_posts, malformed_posts, good_posts
+from tests.util.feed import rss_feed_template, atom_feed_template, \
+    feedtext_to_blog
 
 
-def _format_date(d):
-    # We want to return a timestamp with a timezone, but '%z' on a date
-    # object will return the empty string, so we just hardcode an arbitrary
-    # value, in this caes GMT -5 (EST).
-    return d.strftime('%F %T') + ' -0500'
-
-
-malicious_posts = [
-    {'title': 'script in summary',
-     'link': 'script-in-summary.html',
-     'pubDate': _format_date(date(2014, 12, 26)),
-     'description': '''
-        <script>doBadThings();</script>
-        <p>mwahahaha</p>
-     '''},
-]
-
-malformed_posts = [
-    {'title': 'Post with bad date',
-     'link': 'post-with-bad-date.html',
-     'pubDate': 'never',
-     'description': "Hello, World!\n",
-     },
-]
+fresh_context = pytest.yield_fixture(autouse=True)(fresh_context)
 
 
 def post_summary_etree(post):
     summary = StringIO('<section>%s</section>' % post.summary)
     parser = etree.HTMLParser()
     return etree.parse(summary, parser)
-
-
-fresh_context = pytest.yield_fixture(autouse=True)(fresh_context)
 
 
 @pytest.mark.parametrize('post', malformed_posts)
@@ -112,6 +45,7 @@ def test_malicious(post):
     finally:
         os.remove(blog.feed_url)
 
+
 def test_interrupt_sync():
     """A malformed post in one blog should not prevent syncing the rest.
 
@@ -120,40 +54,13 @@ def test_interrupt_sync():
     collected, and the bad post should not find its way into the db.
     """
     blogs = {
-            'alice': [
-                {'title': 'Diffie-Hellman FTW.',
-                 'link': 'diffe-hellman.html',
-                 'pubDate': _format_date(date(1976, 12, 4)),
-                 'description': 'Neat paper that just came out...',
-                 },
-            ],
-            'mallory': [
-                {'title': 'mwahahaha',
-                 'link': 'mwhahahah.html',
-                 'pubDate': "You'll never sync the rest of the posts!",
-                 'description': '''
-                   You'll never sync the rest of the posts, because when
-                   fetch_posts tries to parse the date in this one, you'll get a
-                   MalformedPostError, and not sync the rest of the blogs!
-
-                   Mwhahahaha!
-                 ''',
-                },
-            ],
-            'bob': [
-                {'title': 'Perfect forward secrecy is pretty cool.',
-                 'link': 'perfect-forward-secrecy.html',
-                 'pubDate': _format_date(date(2014, 12, 30)),
-                 'description': '''
-                   OTR does a good job with this. Too bad it's hard to do with
-                   something like email, where there's no "session."
-                 ''',
-                }
-            ],
+        'alice': [good_posts[0]],
+        'mallory': [malformed_posts[1]],
+        'bob': [good_posts[1]],
     }
     for blogger_name in 'alice', 'mallory', 'bob':
         blog = feedtext_to_blog(rss_feed_template.render(items=blogs[blogger_name]))
-        blog.blogger = Blogger(name=blogger_name, start_date=date(1949, 10, 31))
+        blog.blogger = Blogger(name=blogger_name, start_date=datetime(1949, 10, 31))
         blogs[blogger_name] = blog
         db.session.add(blog)
 
@@ -166,12 +73,13 @@ def test_interrupt_sync():
     for _, blog in blogs.iteritems():
         os.remove(blog.feed_url)
 
+
 def test_text_mimetype():
     """Test that entries with mime type "text/plain" are properly escaped.
 
     Feedparser doesn't do this automatically, so we have to check it ourselves.
     """
-    pubdate = _format_date(date(2014, 12, 31))
+    pubdate = rssdate(datetime(2014, 12, 31))
     entry = '''
     <title>Texsploit</title>
     <link>/all/your/base</link>

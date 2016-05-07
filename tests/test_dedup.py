@@ -6,7 +6,8 @@ published. We try to detect this and not create a second entry for it.
 
 import pytest
 from jinja2 import Template
-from .util import feedtext_to_blog, fresh_context
+from .util import fresh_context
+from .util.feed import feedtext_to_blog
 from ironblogger.model import db, Post
 
 fresh_context = pytest.yield_fixture(autouse=True)(fresh_context)
