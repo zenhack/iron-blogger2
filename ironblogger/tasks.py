@@ -17,9 +17,8 @@ from datetime import datetime
 from os import path
 
 import ironblogger
-from .app import app
+from .app import app, mail
 from .model import Blogger, Blog, Post, User, MalformedPostError, db
-from .mail import mail
 from flask_mail import Message
 
 from alembic.config import Config
