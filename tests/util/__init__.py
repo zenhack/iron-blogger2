@@ -17,6 +17,7 @@ ironblogger.wsgi
 
 
 def fresh_context():
+    """yield fixture; runs test with a basic app.config and empty db."""
     app.config.update(
         IB2_REGION='Boston',
         IB2_TIMEZONE='US/Eastern',
