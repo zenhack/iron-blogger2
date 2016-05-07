@@ -75,14 +75,21 @@ def test_random_db_ok(client, seed):
     This tests checks the site both before and after assigning rounds
     to posts.
     """
+    rand = Random(seed)
     now = arrow.now()
-    random_database(Random(seed), now)
+    random_database(rand, now)
     db.session.commit()
     assert_no_dead_links_site(client)
 
     tasks.assign_rounds(until=to_dbtime(now))
     db.session.commit()
     assert_no_dead_links_site(client)
+
+    page_size = rand.randint(1, 100)
+    _assert_no_dead_links_page(client,
+                               '/?page=1&page_size=%d' % page_size,
+                               set())
+
 
 
 def is_internal_link(link):
