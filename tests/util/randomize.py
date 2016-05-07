@@ -2,8 +2,9 @@
 from urllib import quote
 import os
 from ironblogger.app import db
-from ironblogger.model import Blogger, Blog, Post
-from ironblogger.date import to_dbtime
+from ironblogger.model import Blogger, Blog, Post, Party
+from ironblogger.date import to_dbtime, duedate, duedate_seek
+import arrow
 
 random_ncalls = int(os.getenv('NUM_RANDOM_CALLS', '10'))
 
@@ -80,6 +81,7 @@ def random_database(rand, now):
                           start_date=to_dbtime(start_date))
         db.session.add(blogger)
         random_blogs(rand, now, blogger)
+    random_parties(rand, now, first_start_date)
 
 
 def random_blogs(rand, now, blogger):
@@ -120,10 +122,32 @@ def random_posts(rand, now, blog):
                             summary=summary))
 
 
+def random_parties(rand, now, first_start_date):
+    # The big constraint here is that this has to match what Iron blogger
+    # normally does; parties' first/last duedates must be adjacent and
+    # non-overlapping.
+    end_parties = now.replace(weeks=+1)
+    party_date = random_arrow(rand, first_start_date, end_parties)
+    first_duedate = None
+    while True:
+        last_duedate = duedate_seek(duedate(party_date), 1)
+        party = Party(date=to_dbtime(party_date),
+                      last_duedate=to_dbtime(last_duedate),
+                      first_duedate=to_dbtime(first_duedate),
+                      spent=rand.randint(2000, 10000))
+        first_duedate = to_dbtime(duedate_seek(last_duedate, 1))
+        db.session.add(party)
+        if last_duedate >= end_parties:
+            return
+        party_date = random_arrow(rand,
+                                  arrow.get(last_duedate),
+                                  end_parties)
+
+
 def random_arrow(rand, start, end):
     """Generate a random arrow object in the range [start,end].
 
     `rand` is an instance of `Random`.
     """
-    offset = rand.randint(0, (end - start).total_seconds())
+    offset = rand.randint(0, int((end - start).total_seconds()))
     return start.replace(seconds=offset)
