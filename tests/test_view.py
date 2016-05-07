@@ -14,7 +14,7 @@ from ironblogger.app import app
 from ironblogger.model import db, Post
 from ironblogger.date import to_dbtime
 from .util.example_data import databases as example_databases
-from .util.randomize import random_database
+from .util.randomize import random_database, random_ncalls
 from .util import fresh_context
 fresh_context = pytest.yield_fixture(autouse=True)(fresh_context)
 
@@ -68,7 +68,7 @@ def test_populated_db_page_ok(client, database):
     assert_no_dead_links_site(client)
 
 
-@pytest.mark.randomize(seed=int)
+@pytest.mark.randomize(seed=int, ncalls=random_ncalls)
 def test_random_db_ok(client, seed):
     """Crawl the website with a randomized database.
 

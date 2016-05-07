@@ -77,6 +77,12 @@ It's configured to display code coverage statistics as well.
 New tests should be placed in a file matching `tests/test_*`; This
 allows pytest to pick them up automatically.
 
+We use [pytest-quickcheck][8] to test iron blogger with random data. By
+default we run each randomized test 10 times. This can be change via the
+environment variable `NUM_RANDOM_CALLS`, e.g:
+
+    NUM_RANDOM_CALLS=50 py.test
+
 ## Useful tips
 
 * The command `ironblogger shell` will open a python interpreter prompt

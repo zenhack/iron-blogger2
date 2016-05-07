@@ -1,8 +1,11 @@
 """This package provides helpers for randomzied testsing."""
 from urllib import quote
+import os
 from ironblogger.app import db
 from ironblogger.model import Blogger, Blog, Post
 from ironblogger.date import to_dbtime
+
+random_ncalls = int(os.getenv('NUM_RANDOM_CALLS', '10'))
 
 
 blogger_choices = ['Alice', 'Bob', 'Cindy', 'Dave', 'Eve', 'Fred', 'Gina',
