@@ -5,8 +5,7 @@ from .util import fresh_context
 from .util.example_data import databases as example_databases
 
 from ironblogger.model import db, Blogger, Blog, Post
-from ironblogger.app import app
-from ironblogger.date import duedate
+from ironblogger.date import duedate, from_dbtime, to_dbtime
 from ironblogger import tasks
 
 fresh_context = pytest.yield_fixture(autouse=True)(fresh_context)
@@ -15,8 +14,9 @@ fresh_context = pytest.yield_fixture(autouse=True)(fresh_context)
 class Test_assign_rounds(unittest.TestCase):
 
     def _get_week(self, when):
+        due = to_dbtime(duedate(from_dbtime(when)))
         return db.session.query(Post)\
-            .filter_by(counts_for=duedate(when)).first()
+            .filter_by(counts_for=due).first()
 
     def verify_assignment(self, when, title_part, late):
         post = self._get_week(when)

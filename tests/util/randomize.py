@@ -126,16 +126,20 @@ def random_parties(rand, now, first_start_date):
     # The big constraint here is that this has to match what Iron blogger
     # normally does; parties' first/last duedates must be adjacent and
     # non-overlapping.
+    #
+    # TODO: this is hard to read; clean it up.
     end_parties = now.replace(weeks=+1)
     party_date = random_arrow(rand, first_start_date, end_parties)
     first_duedate = None
     while True:
+        if first_duedate is not None:
+            first_duedate = to_dbtime(first_duedate)
         last_duedate = duedate_seek(duedate(party_date), 1)
         party = Party(date=to_dbtime(party_date),
                       last_duedate=to_dbtime(last_duedate),
-                      first_duedate=to_dbtime(first_duedate),
+                      first_duedate=first_duedate,
                       spent=rand.randint(2000, 10000))
-        first_duedate = to_dbtime(duedate_seek(last_duedate, 1))
+        first_duedate = duedate_seek(last_duedate, 1)
         db.session.add(party)
         if last_duedate >= end_parties:
             return

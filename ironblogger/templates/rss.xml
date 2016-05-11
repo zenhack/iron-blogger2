@@ -8,7 +8,7 @@
 		{% for post in posts %}
 		<item>
 			<title>{{ post.title }}</title>
-			<pubDate>{{ post.timestamp | rssdate }}</pubDate>
+			<pubDate>{{ post.timestamp | timestamp_rss }}</pubDate>
 			<link>{{ post.page_url }}</link>
 			<guid>{{ post.page_url }}</guid>
 			<description>{{ post.summary }}</description>

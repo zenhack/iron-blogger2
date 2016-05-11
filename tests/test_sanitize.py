@@ -1,5 +1,5 @@
 from datetime import datetime
-from ironblogger.date import rssdate
+from ironblogger.date import rssdate, from_dbtime
 from ironblogger import tasks
 from ironblogger.model import *
 import os.path
@@ -79,7 +79,7 @@ def test_text_mimetype():
 
     Feedparser doesn't do this automatically, so we have to check it ourselves.
     """
-    pubdate = rssdate(datetime(2014, 12, 31))
+    pubdate = rssdate(from_dbtime(datetime(2014, 12, 31)))
     entry = '''
     <title>Texsploit</title>
     <link>/all/your/base</link>

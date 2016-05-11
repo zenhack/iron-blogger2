@@ -7,13 +7,13 @@ from lxml import etree
 from flask import url_for
 from werkzeug.exceptions import BadRequest, NotFound
 from urlparse import urlparse
-import arrow
 from random import Random
 
 from ironblogger import tasks
 from ironblogger.app import app
 from ironblogger.model import db, Post
 from ironblogger.date import to_dbtime
+from ironblogger.date import now as localnow
 from ironblogger.view import _page_args
 from .util.example_data import databases as example_databases
 from .util.randomize import random_database, random_ncalls
@@ -118,7 +118,7 @@ def test_random_db_ok(client, seed):
     to posts.
     """
     rand = Random(seed)
-    now = arrow.now()
+    now = localnow()
     random_database(rand, now)
     db.session.commit()
     assert_no_dead_links_site(client)

@@ -20,8 +20,8 @@ import feedparser
 import jinja2
 
 from .app import db
-from .date import duedate, ROUND_LEN, round_diff, set_tz, to_dbtime, \
-    duedate_seek
+from .date import duedate, round_diff, to_dbtime, from_dbtime, \
+    duedate_seek, from_feedtime
 
 MAX_DEBT = 3000
 DEBT_PER_POST = 500
@@ -226,7 +226,7 @@ class Post(db.Model):
 
     @staticmethod
     def _get_pub_date(feed_entry):
-        """Return a datetime.datetime object for the post's publication date.
+        """Return a an arrow object for the post's publication date.
 
         ``feed_entry`` should be a post object as returned by
         ``feedparser.parse``.
@@ -237,7 +237,7 @@ class Post(db.Model):
         for key in 'published', 'created', 'updated':
             key += '_parsed'
             if key in feed_entry and feed_entry[key] is not None:
-                return set_tz(feed_entry[key])
+                return from_feedtime(feed_entry[key])
         raise MalformedPostError("No valid publication date in post: %r" %
                                  feed_entry)
 
@@ -301,42 +301,44 @@ class Post(db.Model):
         return post
 
     def _oldest_valid_duedate(self):
-        ret = duedate_seek(duedate(self.timestamp),
+        ret = duedate_seek(duedate(from_dbtime(self.timestamp)),
                            -(DEBT_PER_POST / LATE_PENALTY))
-        ret = max(ret, duedate(self.blog.blogger.start_date))
+        ret = max(ret, duedate(from_dbtime(self.blog.blogger.start_date)))
 
         prev_party = self._prev_party()
         cur_party = self._cur_party()
 
         if prev_party is not None:
-            ret = max(ret, duedate_seek(set_tz(prev_party), last_duedate, +1))
+            last_duedate = from_dbtime(prev_party.last_duedate)
+            ret = max(ret, duedate_seek(last_duedate, +1))
         if cur_party is not None:
-            ret = max(ret, set_tz(cur_party.first_duedate))
+            ret = max(ret, from_dbtime(cur_party.first_duedate))
 
         return ret
 
     def _youngest_valid_duedate(self):
-        ret = duedate(self.timestamp)
+        ret = duedate(from_dbtime(self.timestamp))
         next_party = self._next_party()
         if next_party is not None:
-            ret = min(ret, duedate_seek(set_tz(next_party.first_duedate), -1))
+            ret = min(ret,
+                      duedate_seek(from_dbtime(next_party.first_duedate), -1))
         return ret
 
     def _prev_party(self):
-        due = to_dbtime(duedate(self.timestamp))
+        due = to_dbtime(duedate(from_dbtime(self.timestamp)))
         return db.session.query(Party)\
             .filter(Party.last_duedate < due)\
             .order_by(Party.last_duedate.desc())\
             .first()
 
     def _cur_party(self):
-        due = to_dbtime(duedate(self.timestamp))
+        due = to_dbtime(duedate(from_dbtime(self.timestamp)))
         return db.session.query(Party)\
             .filter(Party.first_duedate <= due,
                     Party.last_duedate  >= due).first()
 
     def _next_party(self):
-        due = to_dbtime(duedate(self.timestamp))
+        due = to_dbtime(duedate(from_dbtime(self.timestamp)))
         return db.session.query(Party)\
             .filter(Party.first_duedate > due)\
             .order_by(Party.first_duedate.asc())\
@@ -354,7 +356,7 @@ class Post(db.Model):
                     Post.blog_id == Blog.id,
                     Blog.blogger_id == self.blog.blogger.id)\
             .all()
-        dates = set([set_tz(date[0]) for date in dates])
+        dates = set([from_dbtime(date[0]) for date in dates])
 
         # Assign the most recent round this post can count for.
         round = youngest
@@ -374,4 +376,5 @@ class Post(db.Model):
         if self.counts_for is None:
             return None
 
-        return round_diff(duedate(self.timestamp), set_tz(self.counts_for))
+        return round_diff(duedate(from_dbtime(self.timestamp)),
+                          from_dbtime(self.counts_for))

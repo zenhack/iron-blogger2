@@ -19,8 +19,8 @@ from flask.ext.login import login_user, logout_user, login_required, LoginManage
 from .app import app
 from .model import db, Blogger, Blog, Post, Payment, Party, User
 from .model import DEBT_PER_POST, LATE_PENALTY, MAX_DEBT
-from .date import duedate, ROUND_LEN, round_diff, set_tz, in_localtime, \
-    to_dbtime, duedate_seek
+from .date import duedate, ROUND_LEN, round_diff, \
+    from_dbtime, to_dbtime, duedate_seek, now
 from collections import defaultdict
 from datetime import datetime
 from sqlalchemy import and_, or_
@@ -89,19 +89,23 @@ def show_status():
                                                    size=DEFAULT_PAGE_SIZE))
     # SQLAlchemy returns a tuple of the rows, so to actually get the date
     # object, we need to extract it:
-    first_round = duedate(first_round[0])
+    first_round = duedate(from_dbtime(first_round[0]))
 
 
     # Find the the current round:
-    current_round = duedate(datetime.utcnow())
+    current_round = duedate(now())
 
 
     # Work out how many pages there are, and what the bounds of the current page
     # are:
     num_rounds = round_diff(current_round, first_round)
     pageinfo = _page_args(item_count=num_rounds, size=DEFAULT_PAGE_SIZE)
-    start_round = current_round - (ROUND_LEN * pageinfo['size'] * pageinfo['num'])
-    stop_round  = start_round - (ROUND_LEN * pageinfo['size'])
+    start_round = duedate_seek(current_round, -(pageinfo['size'] * pageinfo['num']))
+    stop_round = duedate_seek(start_round, -pageinfo['size'])
+
+    # convert to dbtime, since we use these in a query below:
+    start_round = to_dbtime(start_round)
+    stop_round = to_dbtime(stop_round)
 
     # Get a set of the names of all the bloggers. Same trick with the
     # row/tuple.
@@ -128,16 +132,20 @@ def show_status():
     # sort them into rounds shortly.
     all_post_views = []
     for post in posts:
+        counts_for = post.counts_for
+        if counts_for is not None:
+            counts_for = from_dbtime(counts_for)
         post_view = {
             'title'     : post.title,
             'page_url'  : post.page_url,
             'author'    : post.blog.blogger.name,
             'blog_title': post.blog.title,
             'blog_url'  : post.blog.page_url,
-            'timestamp' : in_localtime(post.timestamp),
-            'counts_for': in_localtime(post.counts_for),
+            'timestamp' : from_dbtime(post.timestamp),
+            'counts_for': counts_for,
             'late?'     : post.counts_for is not None and
-                duedate(post.timestamp) != duedate(post.counts_for),
+                duedate(from_dbtime(post.timestamp)) !=
+                duedate(from_dbtime(post.counts_for)),
             'bonus?'    : post.counts_for is None,
         }
         all_post_views.append(post_view)
@@ -145,7 +153,7 @@ def show_status():
     # We're going to build up a dictionary mapping dates to lists of posts.
     rounds = defaultdict(list)
     for view in all_post_views:
-        rounds[in_localtime(duedate(view['timestamp']))].append(view)
+        rounds[duedate(view['timestamp'])].append(view)
         if view['counts_for'] is not None and view['late?']:
             rounds[view['counts_for']].append(view)
 
@@ -166,6 +174,7 @@ def show_status():
 
 
 def build_ledger(start, stop):
+    """Build a ledger for the dates between start and stop, which must be duedates."""
     if start is None:
         start = db.session.query(Blogger.start_date)\
             .order_by(Blogger.start_date.asc()).first()
@@ -173,15 +182,13 @@ def build_ledger(start, stop):
             # It doesn't really matter what we put here, since there are no
             # bloggers, and thus it won't affect the output, but it has to be
             # *something* to avoid raising exceptions where it is used.
-            start = datetime.utcnow()
+            start = duedate(now())
         else:
-            start = start[0]
+            start = duedate(from_dbtime(start[0]))
 
     if stop is None:
-        stop = datetime.utcnow()
+        stop = duedate(now())
 
-    start = duedate(start)
-    stop = duedate(stop)
     data = {'bloggers': []}
     bloggers = db.session.query(Blogger)\
         .filter(Blogger.start_date < to_dbtime(stop))\
@@ -189,7 +196,7 @@ def build_ledger(start, stop):
     total_paid = 0
     total_incurred = 0
     for blogger in bloggers:
-        first_duedate = duedate(blogger.start_date)
+        first_duedate = duedate(from_dbtime(blogger.start_date))
         first_duedate = max(first_duedate, start)
         posts = db.session.query(Post)\
             .filter(Post.counts_for != None,
@@ -237,12 +244,21 @@ def show_ledger():
         ledger['total']['spent'] = 0
         info.append(ledger)
     elif parties[0].last_duedate is not None:
-        ledger = build_ledger(duedate_seek(set_tz(parties[0].last_duedate), +1), None)
+        # XXX: Party.last_duedate *should* always be a duedate already, but it
+        # isn't, because the admin interface allows entering arbitrary dates,
+        # and it's annoying for the admin to actually specify a proper duedate.
+        # We should fix this in the UI, then add a migration script to fix
+        # already-wonky databses. In the meantime, we explicitly get the
+        # duedate:
+        from_dbtime(parties[0].last_duedate)
+        ledger = build_ledger(duedate_seek(from_dbtime(parties[0].last_duedate), +1), None)
         ledger['date'] = None
         ledger['total']['spent'] = 0
         info.append(ledger)
     for party in parties:
-        ledger = build_ledger(party.first_duedate, party.last_duedate)
+        # Same note about the call to duedate as above:
+        ledger = build_ledger(from_dbtime(party.first_duedate) if party.first_duedate else None,
+                              from_dbtime(party.last_duedate) if party.last_duedate else None)
         ledger['date'] = party.date
         ledger['total']['spent'] = party.spent
         info.append(ledger)

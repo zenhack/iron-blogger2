@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 from ironblogger.app import db
 from ironblogger.tasks import import_bloggers, export_bloggers
 from ironblogger.model import Blogger
+from ironblogger.date import now
 from cStringIO import StringIO
 from datetime import datetime
 from random import Random
@@ -108,5 +109,5 @@ class Test_export_import_export(object):
 
     @pytest.mark.randomize(seed=int)
     def test_random_db(self, seed):
-        random_database(Random(seed), arrow.now())
+        random_database(Random(seed), now())
         export_import_export()
