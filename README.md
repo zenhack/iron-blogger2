@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/zenhack/iron-blogger2.svg?branch=master)](https://travis-ci.org/zenhack/iron-blogger2)
+
 Iron Blogger 2 is a reimplementation of the original [iron_blogger][1].
 The consensus among those of the original's users who are also
 developers is that it is unmaintainable, and a rewrite is needed.
