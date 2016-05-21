@@ -244,19 +244,11 @@ def show_ledger():
         ledger['total']['spent'] = 0
         info.append(ledger)
     elif parties[0].last_duedate is not None:
-        # XXX: Party.last_duedate *should* always be a duedate already, but it
-        # isn't, because the admin interface allows entering arbitrary dates,
-        # and it's annoying for the admin to actually specify a proper duedate.
-        # We should fix this in the UI, then add a migration script to fix
-        # already-wonky databses. In the meantime, we explicitly get the
-        # duedate:
-        from_dbtime(parties[0].last_duedate)
         ledger = build_ledger(duedate_seek(from_dbtime(parties[0].last_duedate), +1), None)
         ledger['date'] = None
         ledger['total']['spent'] = 0
         info.append(ledger)
     for party in parties:
-        # Same note about the call to duedate as above:
         ledger = build_ledger(from_dbtime(party.first_duedate) if party.first_duedate else None,
                               from_dbtime(party.last_duedate) if party.last_duedate else None)
         ledger['date'] = party.date
