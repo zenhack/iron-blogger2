@@ -2,8 +2,8 @@
 {% extends "layout.html" %}
 {% block content %}
 
-{% for duedate, round in rounds %}
-<h2>Round ending {{ duedate | timestamp_long }}</h2>
+{% for round in rounds %}
+<h2>Round ending {{ round.due | timestamp_long }}</h2>
 
 <table class="table">
 	<tr>
@@ -12,18 +12,18 @@
 		<th>Blog</th>
 		<th>Date</th>
 	</tr>
-	{% for post in round['posts'] %}
+	{% for post in round.posts %}
 	<tr>
-		<td>{{ post['author'] }}</td>
+		<td>{{ post.author }}</td>
 		<td><a href="{{ post.page_url }}">{{ post.title }}</a></td>
-		<td><a href="{{ post['blog_url'] }}">{{ post['blog_title'] }}</a></td>
+		<td><a href="{{ post.blog_url }}">{{ post.blog_title }}</a></td>
 		<td>
-			{{ post['timestamp'] | timestamp_short }}
-			{% if post['bonus?'] %}
+			{{ post.pub_date | timestamp_short }}
+			{% if not post.counts_for %}
 			(Bonus!)
-			{% elif post['counts_for'] < duedate %}
-			(Late, counts for {{ post['counts_for'] | timestamp_short }})
-			{% elif post['late?'] %}
+			{% elif post.counts_for < round.due %}
+			(Late, counts for {{ post.counts_for | timestamp_short }})
+			{% elif post.counts_for != round.due %}
 			(Late)
 			{% endif %}
 		</td>
@@ -31,7 +31,7 @@
 	{% endfor %}
 </table>
 	<h3>Missing in action:</h3>
-	<p>{{ ', '.join(round['missing-in-action']) }}</p>
+	<p>{{ round.missing_in_action | join(', ') }}</p>
 {% endfor %}
 {{ page.nav('show_status', pageinfo) }}
 {% endblock %}

@@ -12,6 +12,28 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>
+"""HTTP handlers.
+
+"views" in django terminology, or "controllers" if you're coming from a rails
+world or actually know what MVC is about.
+
+The structure of this module is in a transitional period; We're working on
+making things more readable and maintainable.
+
+The old design was characterized by the use of procedural logic to build up an
+ad-hoc data structure (e.g. dictionaries of dictionaries of lists of tuples...).
+The code for this was generally hard to read, and it was hard to keep track of
+the details of that data structure.
+
+The new design defines classes for the data that will be passed to the
+template, and tries as much as possible to keep the details of their structure
+encapsulated. There are lots of convience methods decorated with @property for
+use in the templates, which keeps the templates (relatively) logic free.
+
+So far only the status page has been dealt with (and is not necessarily done).
+The classes `RoundStatus` and `PostStatus` are the sort of class described
+above.
+"""
 import flask
 from flask import make_response, request, url_for
 from flask.ext.login import login_user, logout_user, login_required, LoginManager
@@ -19,10 +41,8 @@ from flask.ext.login import login_user, logout_user, login_required, LoginManage
 from .app import app
 from .model import db, Blogger, Blog, Post, Payment, Party, User
 from .model import DEBT_PER_POST, LATE_PENALTY, MAX_DEBT
-from .date import duedate, ROUND_LEN, round_diff, \
+from .date import duedate, round_diff, \
     from_dbtime, to_dbtime, duedate_seek, now
-from collections import defaultdict
-from datetime import datetime
 from sqlalchemy import and_, or_
 
 # We don't reference this anywhere else in this file, but we're importing it
@@ -45,38 +65,86 @@ def render_template(*args, **kwargs):
     return flask.render_template(*args, **kwargs)
 
 
+class PostStatus(object):
+    """Status view info for a post"""
+
+    def __init__(self, post):
+        self._post = post
+
+    @property
+    def author(self):
+        return self._post.blog.blogger.name
+
+    @property
+    def blog_url(self):
+        return self._post.blog.page_url
+
+    @property
+    def blog_title(self):
+        return self._post.blog.title
+
+    @property
+    def counts_for(self):
+        if self._post.counts_for is None:
+            return None
+        return from_dbtime(self._post.counts_for)
+
+    @property
+    def page_url(self):
+        return self._post.page_url
+
+    @property
+    def pub_date(self):
+        return from_dbtime(self._post.timestamp)
+
+    @property
+    def title(self):
+        return self._post.title
+
+
+class RoundStatus(object):
+    """Status view info for a single round."""
+
+    def __init__(self, due, bloggers):
+        """Create a status info object.
+
+        `due` is the duedate of the round for this object.
+        `bloggers` is a list of all the participating bloggers.
+        """
+        self.due = due
+        self.bloggers = bloggers
+        self.posts = []
+
+    def populate_posts(self, posts):
+        """Collect all of the posts from `posts` that belong in this round.
+
+        `posts` is a list of `Post` objects.
+
+        `populate_posts` will add each post in `posts` that either:
+
+            * Were published in the corresponding round, or
+            * Were counted towards the corresponding round.
+        """
+        for post in posts:
+            post_status = PostStatus(post)
+            if duedate(from_dbtime(post.timestamp)) == self.due:
+                self.posts.append(post_status)
+            elif (post.counts_for is not None and
+                  from_dbtime(post.counts_for) == self.due):
+                self.posts.append(post_status)
+
+    @property
+    def missing_in_action(self):
+        missing = set(self.bloggers)
+        for post in self.posts:
+            if post.counts_for == self.due:
+                missing.remove(post.author)
+        return sorted(list(missing))
+
+
 @app.route('/status')
 def show_status():
-    # We're going to build up a somewhat complex data structure describing the
-    # posting activity for the range of weeks corresponding to the page we've
-    # been asked to display. We construct it in stages, but the final data
-    # structure is formatted as follows:
-    #
-    # - A list of pairs `(due, info)`, sorted by `due`, where:
-    #   - `due` is datetime object in the local timezone, representing a
-    #     duedate.
-    #   - `info` is a list of dictionaries with two elements:
-    #     - 'missing-in-action', which is an (alphabetical) list of the
-    #       bloggers who did not post for the week with duedate `due`.
-    #     - 'posts', a list of dictionaries containing various information
-    #       about each post that was either posted during that week or counted
-    #       for that week. Note that late posts will appear in two places.
-    #
-    # Rough example:
-    #
-    # [ (duedate1, {
-    #       'missing-in-action: ['alice', 'bob'],
-    #       'posts': [{...}, {...}, {...}, ...],
-    #    }),
-    #   (duedate2, {
-    #       'missing-in-action': ['bob'],
-    #       'posts': [{...}, {...}, {...}, ...],
-    #    }),
-    #   ...
-    # ]
-
-
-    DEFAULT_PAGE_SIZE=5
+    DEFAULT_PAGE_SIZE = 5
 
     # Find the first round:
     first_round = db.session.query(Blogger.start_date)\
@@ -89,7 +157,8 @@ def show_status():
                                                    size=DEFAULT_PAGE_SIZE))
     # SQLAlchemy returns a tuple of the rows, so to actually get the date
     # object, we need to extract it:
-    first_round = duedate(from_dbtime(first_round[0]))
+    first_round = first_round[0]
+    first_round = duedate(from_dbtime(first_round))
 
 
     # Find the the current round:
@@ -103,19 +172,22 @@ def show_status():
     start_round = duedate_seek(current_round, -(pageinfo['size'] * pageinfo['num']))
     stop_round = duedate_seek(start_round, -pageinfo['size'])
 
-    # convert to dbtime, since we use these in a query below:
-    start_round = to_dbtime(start_round)
-    stop_round = to_dbtime(stop_round)
-
     # Get a set of the names of all the bloggers. Same trick with the
     # row/tuple.
     all_bloggers = db.session.query(Blogger.name).all()
     all_bloggers = set([row[0] for row in all_bloggers])
 
+    rounds = []
+    for i in range(pageinfo['size']):
+        rounds.append(RoundStatus(due=duedate_seek(start_round, -i),
+                                  bloggers=all_bloggers))
+
     # Collect all of the posts we need to display. This includes (1) any post
     # that counts for some round on the current page, and (2) any post which
     # was published during one of those rounds AND does not count for *any*
     # round (extra posts):
+    start_round = to_dbtime(rounds[0].due)
+    stop_round = to_dbtime(rounds[-1].due)
     posts = db.session.query(Post).filter(or_(
         # First case: post isn't being counted, but was published in the right
         # time peroid:
@@ -127,49 +199,11 @@ def show_status():
              Post.counts_for >  stop_round)
     )).order_by(Post.timestamp.desc()).all()
 
-    # Massage the information about the posts into the format we're going to
-    # pass to the template. We accumulate the posts into one big list. we'll
-    # sort them into rounds shortly.
-    all_post_views = []
-    for post in posts:
-        counts_for = post.counts_for
-        if counts_for is not None:
-            counts_for = from_dbtime(counts_for)
-        post_view = {
-            'title'     : post.title,
-            'page_url'  : post.page_url,
-            'author'    : post.blog.blogger.name,
-            'blog_title': post.blog.title,
-            'blog_url'  : post.blog.page_url,
-            'timestamp' : from_dbtime(post.timestamp),
-            'counts_for': counts_for,
-            'late?'     : post.counts_for is not None and
-                duedate(from_dbtime(post.timestamp)) !=
-                duedate(from_dbtime(post.counts_for)),
-            'bonus?'    : post.counts_for is None,
-        }
-        all_post_views.append(post_view)
+    for round in rounds:
+        round.populate_posts(posts)
 
-    # We're going to build up a dictionary mapping dates to lists of posts.
-    rounds = defaultdict(list)
-    for view in all_post_views:
-        rounds[duedate(view['timestamp'])].append(view)
-        if view['counts_for'] is not None and view['late?']:
-            rounds[view['counts_for']].append(view)
-
-    # Now add in information about what bloggers didn't post.
-    for k in rounds.keys():
-        active = set([post['author'] for post in rounds[k]])
-        missing = all_bloggers.copy() - active
-        rounds[k] = {
-            'posts': rounds[k],
-            'missing-in-action': sorted(missing),
-        }
-
-    # Just before we pass the data into the template, we convert it to a
-    # (sorted) list of paris, so the weeks come out in order.
     return render_template('status.html',
-                           rounds=sorted(rounds.iteritems(), reverse=True),
+                           rounds=rounds,
                            pageinfo=pageinfo)
 
 
