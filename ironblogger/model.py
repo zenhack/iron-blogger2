@@ -133,7 +133,7 @@ class Blog(db.Model):
                 and_(Post.guid != None, Post.guid == post.guid),
                 Post.title == post.title,
                 Post.page_url == post.page_url,
-            )).first()
+            )).filter(Blog.id == self.id).first()
 
             if prev_version is not None:
                 # Override the information in the previous version:
