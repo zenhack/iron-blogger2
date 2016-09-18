@@ -131,7 +131,6 @@ class Blog(db.Model):
                 # the db, we consider it to be the same post. Note that
                 # guid can be NULL, so we need to check for that.
                 and_(Post.guid != None, Post.guid == post.guid),
-                Post.title == post.title,
                 Post.page_url == post.page_url,
             )).filter(Blog.id == self.id).first()
 
