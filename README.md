@@ -4,9 +4,6 @@ Iron Blogger 2 is a reimplementation of the original [iron_blogger][1].
 The consensus among those of the original's users who are also
 developers is that it is unmaintainable, and a rewrite is needed.
 
-Iron Blogger 2 is just barely feature complete enough to start using;
-Much more work is needed. Patches welcome!
-
 # Setting Up a Development Environment
 
 ###Prerequisites
