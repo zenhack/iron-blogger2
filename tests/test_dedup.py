@@ -53,7 +53,7 @@ changes = {
 }
 
 
-@pytest.mark.parametrize('to_keep', ['title', 'link', 'guid'])
+@pytest.mark.parametrize('to_keep', ['link', 'guid'])
 def test_detect_change(to_keep):
     blog = feedtext_to_blog(feed_template.render(**original_post))
     db.session.add(blog)
