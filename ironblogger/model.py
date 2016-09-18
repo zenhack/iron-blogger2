@@ -23,6 +23,8 @@ from .app import db
 from .date import duedate, round_diff, to_dbtime, from_dbtime, \
     duedate_seek, from_feedtime
 
+from sqlalchemy import and_, or_
+
 MAX_DEBT = 3000
 DEBT_PER_POST = 500
 LATE_PENALTY = 100
@@ -112,9 +114,6 @@ class Blog(db.Model):
         logging.info('Syncing posts for blog %r by %r',
                      self.title,
                      self.blogger.name)
-        last_post = db.session.query(Post)\
-            .filter_by(blog=self)\
-            .order_by(Post.timestamp.desc()).first()
         feed = feedparser.parse(self.feed_url,
                                 etag=self.etag,
                                 modified=self.modified)
@@ -125,36 +124,25 @@ class Blog(db.Model):
 
         feed_posts = map(Post.from_feed_entry, feed.entries)
 
-        # The loop below assumes our feed entries are sorted by date, newest
-        # first. This ensures just that:
-        feed_posts = sorted([(post.timestamp, post) for post in feed_posts])
-        feed_posts.reverse()
-        feed_posts = [post for (_date, post) in feed_posts]
-
         for post in feed_posts:
             # Check if the post is already in the db:
-            if last_post is not None:
-                if post.timestamp < last_post.timestamp:
-                    # We can stop storing posts when we get to one that's older
-                    # than one we already have. Note that we can't do less than
-                    # or equal here, since someone might post more than one
-                    # post in a day.
-                    break
-                if (
-                    # If any of the below attributes match a post already in
-                    # the db, we consider it to be the same post. Note that
-                    # guid can be NULL, so we need to check for that.
-                    (post.guid is not None and post.guid == last_post.guid) or
-                     post.title == last_post.title or post.page_url ==
-                     last_post.page_url):
+            prev_version = db.session.query(Post).filter(or_(
+                # If any of the below attributes match a post already in
+                # the db, we consider it to be the same post. Note that
+                # guid can be NULL, so we need to check for that.
+                and_(Post.guid != None, Post.guid == post.guid),
+                Post.title == post.title,
+                Post.page_url == post.page_url,
+            )).first()
 
-                    # Override the information in the previous version:
-                    logging.info('Update existing post %r', post.page_url)
-                    last_post.title = post.title
-                    last_post.guid = post.guid
-                    last_post.page_url = post.page_url
-                    last_post.summary = post.summary
-                    continue
+            if prev_version is not None:
+                # Override the information in the previous version:
+                logging.info('Update existing post %r', post.page_url)
+                prev_version.title = post.title
+                prev_version.guid = post.guid
+                prev_version.page_url = post.page_url
+                prev_version.summary = post.summary
+                continue
 
             post.blog = self
             db.session.add(post)
