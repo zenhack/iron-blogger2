@@ -146,6 +146,16 @@ def send_reminders():
     )
     recipients = [r[0] for r in db.session.query(Blogger.email).all()]
     mail.send(Message(subject='Reminder: Iron Blogger post due Sunday!',
+                      # The whole point of this setting is that it's supposed
+                      # to be a *default*, i.e. it should get used if we don't
+                      # pass sender at all. It *used to* work as expected, but
+                      # at some point it started throwing an exception about
+                      # having no default sender.
+                      #
+                      # I (zenhack) don't know what happened, and frankly can't
+                      # be bothered to investigate further for now. Instead we
+                      # just pass it in explcitly
+                      sender=app.config['MAIL_DEFAULT_SENDER'],
                       bcc=recipients,
                       body=text))
 
