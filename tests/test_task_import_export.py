@@ -3,7 +3,7 @@ from ironblogger.app import db
 from ironblogger.tasks import import_bloggers, export_bloggers
 from ironblogger.model import Blogger
 from ironblogger.date import now
-from cStringIO import StringIO
+from six.moves import StringIO
 from datetime import datetime
 from random import Random
 from tests.util import fresh_context

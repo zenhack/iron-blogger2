@@ -6,7 +6,7 @@ import pytest
 from lxml import etree
 from flask import url_for
 from werkzeug.exceptions import BadRequest, NotFound
-from urlparse import urlparse
+from six.moves.urllib_parse import urlparse
 from random import Random
 
 from ironblogger import tasks

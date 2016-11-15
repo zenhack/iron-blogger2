@@ -5,7 +5,7 @@ from ironblogger.model import *
 import os.path
 import pytest
 from lxml import etree
-from StringIO import StringIO
+from six.moves import StringIO
 
 from tests.util import fresh_context
 

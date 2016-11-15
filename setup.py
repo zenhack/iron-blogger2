@@ -32,6 +32,7 @@ setup(name='ironblogger',
           'schema',
           'alembic',
           'arrow',
+          'six',
           # Depending on your database, you may need one of the following.
           # uncomment as needed:
           #

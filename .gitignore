@@ -1,6 +1,6 @@
 *.db
 *.pyc
-.venv
+.venv*
 *.egg-info
 build
 dist

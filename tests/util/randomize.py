@@ -1,5 +1,5 @@
 """This package provides helpers for randomzied testsing."""
-from urllib import quote
+from six.moves.urllib_parse import quote
 import os
 from ironblogger.app import db
 from ironblogger.model import Blogger, Blog, Post, Party
