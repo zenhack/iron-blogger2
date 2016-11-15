@@ -86,7 +86,7 @@ def import_bloggers(file):
     session = db.session
 
     yml = yaml.load(file)
-    for blogger in yml.iteritems():
+    for blogger in yml.items():
         name = blogger[0]
 
         # We have to be careful when parsing the date (typically in

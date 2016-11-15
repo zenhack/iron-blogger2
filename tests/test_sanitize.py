@@ -70,7 +70,7 @@ def test_interrupt_sync():
     assert len(blogs['bob'].posts) == 1
 
     # clean up the temporary files:
-    for _, blog in blogs.iteritems():
+    for _, blog in blogs.items():
         os.remove(blog.feed_url)
 
 

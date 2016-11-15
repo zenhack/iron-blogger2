@@ -11,8 +11,8 @@ from datetime import datetime
 import tempfile
 import os
 
-rss_feed_template = '''
-<?xml version="1.0" encoding="utf-8"?>
+rss_feed_template = \
+'''<?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0">
     <channel>
         <title>Blackhat posts</title>
@@ -34,8 +34,8 @@ rss_feed_template = '''
 </rss>
 '''
 
-atom_feed_template = '''
-<?xml version="1.0" encoding="utf-8"?>
+atom_feed_template = \
+'''<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title>Blackhat posts</title>
     <link>index.html</link>
@@ -60,7 +60,7 @@ def feedtext_to_blog(feedtext):
     """Convert the text of a feed to a blog object."""
     with tempfile.NamedTemporaryFile(delete=False) as f:
         name = f.name
-        f.write(feedtext)
+        f.write(feedtext.encode('utf-8'))
     try:
         blogger = Blogger(name='Mr. Badguy', start_date=datetime(1973, 3, 17))
         return Blog(

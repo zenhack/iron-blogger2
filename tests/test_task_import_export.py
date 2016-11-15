@@ -35,17 +35,23 @@ def test_import_bloggers():
     import_bloggers(StringIO(legacy_yaml))
     bloggers = Blogger.query.order_by(Blogger.name).all()
 
+    # We sort the data below to get a deterministic ordering, but
+    # dictionaries in python 3 aren't ordered, so we need to supply
+    # a custom key function:
+    def keyfn(val):
+        return sorted(list(val))
+
     actual = [
         {
             'display_name': blogger.name,
             'start_date': blogger.start_date,
-            'blogs': sorted([  # We sort to get a deterministic ordering.
+            'blogs': sorted([
                 {
                     'title': blog.title,
                     'page_url': blog.page_url,
                     'feed_url': blog.feed_url,
                 } for blog in blogger.blogs
-            ]),
+            ], key=keyfn),
         } for blogger in bloggers
     ]
 
@@ -76,7 +82,7 @@ def test_import_bloggers():
                     'page_url': 'http://example.com/bob/kittens',
                     'feed_url': 'http://example.com/bob/kittens/feed.atom',
                 },
-            ])
+            ], key=keyfn)
         },
     ]
 
