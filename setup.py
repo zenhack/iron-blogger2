@@ -33,6 +33,7 @@ setup(name='ironblogger',
           'alembic',
           'arrow',
           'six',
+          'typing',
           # Depending on your database, you may need one of the following.
           # uncomment as needed:
           #

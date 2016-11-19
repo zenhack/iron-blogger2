@@ -21,6 +21,7 @@ from flask.ext.login import UserMixin
 from passlib.hash import sha512_crypt
 import feedparser
 import jinja2
+import six
 
 from .app import db
 from .date import duedate, round_diff, to_dbtime, from_dbtime, \
@@ -69,16 +70,16 @@ class User(db.Model, UserMixin):
     blogger_id = db.Column(db.Integer, db.ForeignKey('blogger.id'), unique=True)
     blogger = db.relationship('Blogger', backref=db.backref('user', uselist=False))
 
-    def verify_password(self, password: str) -> bool:
+    def verify_password(self, password):  # type: (six.text_type) -> bool
         if self.hashed_password is None:
             return False
         else:
             return sha512_crypt.verify(password, self.hashed_password)
 
-    def set_password(self, password: str) -> None:
+    def set_password(self, password):  # type: (six.text_type) -> None
         self.hashed_password = sha512_crypt.encrypt(password)
 
-    def get_id(self) -> str:
+    def get_id(self):  # type: () -> six.text_type
         """Slightly non-intuitively returns self.name.
 
         This is here for the benefit of Flask-Login.
@@ -102,7 +103,7 @@ class Blogger(db.Model):
     # people are when it comes time to collect debts:
     real_name = db.Column(db.String)
 
-    def __repr__(self) -> str:
+    def __repr__(self): # type: () -> str
         return self.name
 
 
@@ -123,7 +124,7 @@ class Blog(db.Model):
         backref=db.backref('blogs', cascade='all, delete-orphan')
     )
 
-    def fetch_posts(self) -> None:
+    def fetch_posts(self): # type: () -> None
         logging.info('Syncing posts for blog %r by %r',
                      self.title,
                      self.blogger.name)
@@ -225,7 +226,7 @@ class Post(db.Model):
     )
 
     @staticmethod
-    def _get_pub_date(feed_entry) -> LocalArrow:
+    def _get_pub_date(feed_entry): # type: (Entry, Any) -> LocalArrow
         """Return a LocalArrow for the post's publication date.
 
         ``feed_entry`` should be a post object as returned by
@@ -242,7 +243,7 @@ class Post(db.Model):
                                  feed_entry)
 
     @staticmethod
-    def from_feed_entry(entry: Entry):
+    def from_feed_entry(entry): # type: (Entry) -> Post
         """Read and construct Post object from ``entry``.
 
         ``entry`` should be a post object as returned by ``feedparser.parse``.

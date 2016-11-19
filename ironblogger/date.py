@@ -40,15 +40,15 @@ ROUND_LEN = timedelta(weeks=1)
 # named type, according to the definitions in this module's docstring.
 
 
-def to_dbtime(arr: LocalArrow) -> DBTime:
+def to_dbtime(arr): # type: (LocalArrow) -> DBTime
     return DBTime(arr.to('UTC').datetime.replace(tzinfo=None))
 
 
-def from_dbtime(dt: DBTime) -> LocalArrow:
+def from_dbtime(dt): # type: (DBTime) -> LocalArrow
     return LocalArrow(arrow.get(dt).to('UTC').to(app.config['IB2_TIMEZONE']))
 
 
-def from_feedtime(feedtime: FeedTime) -> LocalArrow:
+def from_feedtime(feedtime): # type: (FeedTime) -> LocalArrow
     """Extract a local arrow from feed entry.
 
     `feedtime` should be the value of a feed entry's publication date.
@@ -60,7 +60,7 @@ def from_feedtime(feedtime: FeedTime) -> LocalArrow:
     return LocalArrow(arrow.get(feedtime).to(app.config['IB2_TIMEZONE']))
 
 
-def duedate_seek(due: DueDate, count: int) -> DueDate:
+def duedate_seek(due, count): # type: (DueDate, int) -> DueDate
     """Return the duedate `count` rounds after `due`.
 
     Earlier rounds may be found by supplying negative values for `count`.
@@ -71,7 +71,7 @@ def duedate_seek(due: DueDate, count: int) -> DueDate:
     return DueDate(due.replace(weeks=count))
 
 
-def duedate(post_date: LocalArrow) -> DueDate:
+def duedate(post_date): # type: (LocalArrow) -> DueDate
     """The due date for which a post published on ``post_date`` counts.
 
     `post_date` must be a local arrow.
@@ -82,7 +82,7 @@ def duedate(post_date: LocalArrow) -> DueDate:
     return DueDate(post_date.ceil('week'))
 
 
-def rssdate(arr: LocalArrow) -> FeedTime:
+def rssdate(arr): # type: (LocalArrow) -> FeedTime
     """Format ``arr`` as needed by rss.
 
     This is *almost* as specified in rfc822, but the year is 4 digits instead
@@ -93,16 +93,16 @@ def rssdate(arr: LocalArrow) -> FeedTime:
     return FeedTime(arr.strftime('%d %b %Y %T %z'))
 
 
-def round_diff(last: DueDate, first: DueDate) -> int:
+def round_diff(last, first): # type: (DueDate, DueDate) -> int
     """Return the number of rounds between two duedates.
 
     both `first` and `last` must be duedates.
     """
     # The call to round() is necessary, since if the dates cross a dst
     # boundary, it won't be a whole number of weeks.
-    return round((last - first).total_seconds()/ROUND_LEN.total_seconds())
+    return int(round((last - first).total_seconds()/ROUND_LEN.total_seconds()))
 
 
-def now() -> LocalArrow:
+def now(): # type: () -> LocalArrow
     """Return the current time and date as a local arrow."""
     return LocalArrow(arrow.now().to(app.config["IB2_TIMEZONE"]))
