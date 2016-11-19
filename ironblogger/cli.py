@@ -16,7 +16,8 @@
 from argparse import ArgumentParser
 import sys
 
-from .tasks import *
+from .tasks import init_db, import_bloggers, export_bloggers, make_admin, \
+    send_reminders, shell, fetch_posts, assign_rounds, sync
 from .app import app
 
 commands = {
