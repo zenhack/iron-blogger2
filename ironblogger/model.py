@@ -22,12 +22,14 @@ import jinja2
 from .app import db
 from .date import duedate, round_diff, to_dbtime, from_dbtime, \
     duedate_seek, from_feedtime
+from currency import Cents
+from ironblogger.date import LocalArrow
 
 from sqlalchemy import and_, or_
 
-MAX_DEBT = 3000
-DEBT_PER_POST = 500
-LATE_PENALTY = 100
+MAX_DEBT = Cents(3000)
+DEBT_PER_POST = Cents(500)
+LATE_PENALTY = Cents(100)
 
 feedparser.USER_AGENT = \
         'IronBlogger/git ' + \
@@ -56,16 +58,16 @@ class User(db.Model, UserMixin):
     blogger_id = db.Column(db.Integer, db.ForeignKey('blogger.id'), unique=True)
     blogger = db.relationship('Blogger', backref=db.backref('user', uselist=False))
 
-    def verify_password(self, password):
+    def verify_password(self, password: str) -> bool:
         if self.hashed_password is None:
             return False
         else:
             return sha512_crypt.verify(password, self.hashed_password)
 
-    def set_password(self, password):
+    def set_password(self, password: str) -> None:
         self.hashed_password = sha512_crypt.encrypt(password)
 
-    def get_id(self):
+    def get_id(self) -> str:
         """Slightly non-intuitively returns self.name.
 
         This is here for the benefit of Flask-Login.
@@ -89,7 +91,7 @@ class Blogger(db.Model):
     # people are when it comes time to collect debts:
     real_name = db.Column(db.String)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.name
 
 
@@ -110,7 +112,7 @@ class Blog(db.Model):
         backref=db.backref('blogs', cascade='all, delete-orphan')
     )
 
-    def fetch_posts(self):
+    def fetch_posts(self) -> None:
         logging.info('Syncing posts for blog %r by %r',
                      self.title,
                      self.blogger.name)
@@ -212,8 +214,8 @@ class Post(db.Model):
     )
 
     @staticmethod
-    def _get_pub_date(feed_entry):
-        """Return a an arrow object for the post's publication date.
+    def _get_pub_date(feed_entry) -> LocalArrow:
+        """Return a LocalArrow for the post's publication date.
 
         ``feed_entry`` should be a post object as returned by
         ``feedparser.parse``.
