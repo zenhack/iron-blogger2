@@ -12,6 +12,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>
+
+from typing import TYPE_CHECKING, Any
+
 import logging
 
 from flask.ext.login import UserMixin
@@ -22,7 +25,7 @@ import jinja2
 from .app import db
 from .date import duedate, round_diff, to_dbtime, from_dbtime, \
     duedate_seek, from_feedtime
-from currency import Cents
+from .currency import Cents
 from ironblogger.date import LocalArrow
 
 from sqlalchemy import and_, or_
@@ -35,6 +38,14 @@ feedparser.USER_AGENT = \
         'IronBlogger/git ' + \
         '+https://github.com/zenhack/iron-blogger2 ' + \
         feedparser.USER_AGENT
+
+
+# The `Entry` class doesn't actually exist; it's only defined in our stub
+# file. consequently, we can't use it at run-time.
+if TYPE_CHECKING:
+    Entry = feedparser.Entry
+else:
+    Entry = Any
 
 
 class MalformedPostError(Exception):
@@ -231,7 +242,7 @@ class Post(db.Model):
                                  feed_entry)
 
     @staticmethod
-    def from_feed_entry(entry):
+    def from_feed_entry(entry: Entry):
         """Read and construct Post object from ``entry``.
 
         ``entry`` should be a post object as returned by ``feedparser.parse``.
