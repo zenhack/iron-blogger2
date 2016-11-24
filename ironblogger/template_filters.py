@@ -1,7 +1,8 @@
 
 from .app import app
-from .date import rssdate, from_dbtime
+from .date import rssdate, from_dbtime, DBTime, FeedTime
 from .currency import format_usd
+import six
 
 
 format_usd = app.template_filter('currency')(format_usd)
@@ -9,6 +10,8 @@ format_usd = app.template_filter('currency')(format_usd)
 
 @app.template_filter()
 def timestamp_rss(date):
+    # type: (DBTime) -> FeedTime
+
     # XXX: This filter is currently only used on database objects, so we need
     # this to be a dbtime, but it's a bit ugly, since we normally try to avoid
     # doing logic with dbtimes.

@@ -42,12 +42,15 @@ from .app import app
 from .model import db, Blogger, Blog, Post, Payment, Party, User
 from .model import DEBT_PER_POST, LATE_PENALTY, MAX_DEBT
 from .date import duedate, round_diff, \
-    from_dbtime, to_dbtime, duedate_seek, now
+    from_dbtime, to_dbtime, duedate_seek, now, DueDate, LocalArrow
 from sqlalchemy import and_, or_
 
 # We don't reference this anywhere else in this file, but we're importing it
 # for the side effect of defining the filters:
 from . import template_filters
+
+from typing import Optional
+import six
 
 
 login_manager = LoginManager()
@@ -56,6 +59,7 @@ login_manager.init_app(app)
 
 @login_manager.user_loader
 def load_user(user_id):
+    # type: (six.text_type) -> Optional[User]
     return db.session.query(User)\
         .filter_by(name=user_id).first()
 
@@ -68,37 +72,37 @@ def render_template(*args, **kwargs):
 class PostStatus(object):
     """Status view info for a post"""
 
-    def __init__(self, post):
+    def __init__(self, post):  # type: (Post) -> None
         self._post = post
 
     @property
-    def author(self):
+    def author(self):  # type: () -> six.text_type
         return self._post.blog.blogger.name
 
     @property
-    def blog_url(self):
+    def blog_url(self):  # type: () -> six.text_type
         return self._post.blog.page_url
 
     @property
-    def blog_title(self):
+    def blog_title(self): # type: () -> six.text_type
         return self._post.blog.title
 
     @property
-    def counts_for(self):
+    def counts_for(self): # type: () -> DueDate
         if self._post.counts_for is None:
             return None
-        return from_dbtime(self._post.counts_for)
+        return duedate(from_dbtime(self._post.counts_for))
 
     @property
-    def page_url(self):
+    def page_url(self):  # type: () -> six.text_type
         return self._post.page_url
 
     @property
-    def pub_date(self):
+    def pub_date(self):  # type: () -> LocalArrow
         return from_dbtime(self._post.timestamp)
 
     @property
-    def title(self):
+    def title(self):  # type: () -> six.text_type
         return self._post.title
 
 
@@ -106,6 +110,7 @@ class RoundStatus(object):
     """Status view info for a single round."""
 
     def __init__(self, due, bloggers):
+        # type: (DueDate, List[six.text_type]) -> None
         """Create a status info object.
 
         `due` is the duedate of the round for this object.
@@ -113,9 +118,10 @@ class RoundStatus(object):
         """
         self.due = due
         self.bloggers = bloggers
-        self.posts = []
+        self.posts = []  # type: List[PostStatus]
 
     def populate_posts(self, posts):
+        # type: (List[Post]) -> None
         """Collect all of the posts from `posts` that belong in this round.
 
         `posts` is a list of `Post` objects.
@@ -134,7 +140,7 @@ class RoundStatus(object):
                 self.posts.append(post_status)
 
     @property
-    def missing_in_action(self):
+    def missing_in_action(self):  # type: () -> List[six.text_type]
         missing = set(self.bloggers)
         for post in self.posts:
             if post.counts_for == self.due:

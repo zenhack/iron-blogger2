@@ -25,7 +25,7 @@ from alembic.config import Config
 from alembic import command
 
 
-def init_db():
+def init_db(): # type: () -> None
     db.create_all()
     alembic_cfg = Config(path.join(
         path.dirname(ironblogger.__file__),
@@ -35,7 +35,9 @@ def init_db():
     command.stamp(alembic_cfg, 'head')
 
 
-def assign_rounds(since=None, until=None):
+def assign_rounds(since=None, # type: Optional[DBTime]
+                  until=None  # type: Optional[DBTime]
+                  ): # type: (...) -> None
     """Assign posts to rounds."""
     if until is None:
         until = datetime.utcnow()
@@ -132,7 +134,7 @@ def export_bloggers(file):
     json.dump(result, file)
 
 
-def send_reminders():
+def send_reminders():  # type: () -> None
     text = (
         "Greetings!\n"
         "\n"
@@ -160,7 +162,7 @@ def send_reminders():
                       body=text))
 
 
-def shell():
+def shell():  # type: () -> None
     """Launch a python interpreter.
 
     The CLI does this inside of an app context, so it's a convienent way to
@@ -172,7 +174,7 @@ def shell():
         code.interact(local=locals())
 
 
-def sync():
+def sync():  # type: () -> None
     """Combination of fetch_posts() and assign_rounds().
 
     Doing these in one transaction is the norm, so having a single
@@ -182,7 +184,7 @@ def sync():
     assign_rounds()
 
 
-def fetch_posts():
+def fetch_posts():  # type: () -> None
     """Download new posts"""
     logging.info('Syncing posts')
     blogs = db.session.query(Blog).all()
@@ -193,7 +195,7 @@ def fetch_posts():
             logging.info('%s', e)
 
 
-def make_admin():
+def make_admin():  # type: () -> None
     """Create an admin user.
 
     Prompts the user via the CLI for a username and password, and creates
