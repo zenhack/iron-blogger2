@@ -25,7 +25,7 @@ import six
 
 from .app import db
 from .date import duedate, round_diff, to_dbtime, from_dbtime, \
-    duedate_seek, from_feedtime
+    duedate_seek, from_feedtime, FeedTime
 from .currency import Cents
 from ironblogger.date import LocalArrow
 
@@ -226,7 +226,7 @@ class Post(db.Model):
     )
 
     @staticmethod
-    def _get_pub_date(feed_entry): # type: (Entry, Any) -> LocalArrow
+    def _get_pub_date(feed_entry): # type: (Entry) -> LocalArrow
         """Return a LocalArrow for the post's publication date.
 
         ``feed_entry`` should be a post object as returned by
@@ -238,7 +238,7 @@ class Post(db.Model):
         for key in 'published', 'created', 'updated':
             key += '_parsed'
             if key in feed_entry and feed_entry[key] is not None:
-                return from_feedtime(feed_entry[key])
+                return from_feedtime(FeedTime(feed_entry[key]))
         raise MalformedPostError("No valid publication date in post: %r" %
                                  feed_entry)
 
