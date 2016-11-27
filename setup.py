@@ -17,11 +17,17 @@
 
 from setuptools import setup, find_packages
 
+# Grab description for Pypi
+with open('README.md') as fhl:
+    description = fhl.read()
+
 setup(name='ironblogger',
       version='1.0',
       url='https://github.com/zenhack/iron-blogger2',
       packages=find_packages(),
+      description=description,
       scripts=['scripts/ironblogger'],
+      license='GPLv3',
       install_requires=[
           'Flask',
           'Flask-Admin',
