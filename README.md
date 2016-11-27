@@ -148,8 +148,8 @@ downloaded once per hour, and reminders will be sent out on Fridays.
 
 # License
 
-Iron Blogger 2 is Free Software, released under the GPL3. A list of
-its authors can be found in the file `AUTHORS`.
+Iron Blogger 2 is Free Software, released under the GPL3 (or later). A
+list of its authors can be found in the file `AUTHORS`.
 
 [1]: https://github.com/paultag/iron-blogger
 [2]: http://flask.pocoo.org/
