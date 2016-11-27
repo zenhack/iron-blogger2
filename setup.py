@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+#
 # Copyright 2014 Ian Denhardt <ian@zenhack.net>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -16,7 +18,7 @@
 from setuptools import setup, find_packages
 
 setup(name='ironblogger',
-      version='0.1',
+      version='1.0',
       url='https://github.com/zenhack/iron-blogger2',
       packages=find_packages(),
       scripts=['scripts/ironblogger'],
