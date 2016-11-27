@@ -39,6 +39,8 @@ for the database, and run `ironblogger init-db`
 
 Static assets have been submoduled and are kept in `ironblogger/static/bower_components`, which used to be managed by Bower, which is why it has that name.
 
+To pull these in, run `git submodule init` then `git submodule update` this will dowload all the required css and other media files.
+
 ## Starting the server
 
 Iron Blogger 2 is a [Flask][2] app. A stand-alone development server can
