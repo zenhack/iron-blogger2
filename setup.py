@@ -17,8 +17,11 @@
 
 from setuptools import setup, find_packages
 
+import os
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # Grab description for Pypi
-with open('README.md') as fhl:
+with open(os.path.join(THIS_DIR, 'README.md')) as fhl:
     description = fhl.read()
 
 setup(name='ironblogger',
