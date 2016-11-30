@@ -37,7 +37,17 @@ for the database, and run `ironblogger init-db`
 
 ## Static assets
 
-Static assets have been submoduled and are kept in `ironblogger/static/bower_components`, which used to be managed by Bower, which is why it has that name.
+Static assets have been submoduled and are kept in 
+`ironblogger/static/bower_components`, which used to be managed by Bower, which
+is why it has that name.
+
+To pull these in, run `git submodule init` to set up the submodules
+
+Then run `git submodule update --depth=1` to dowload all the required media
+repositories.
+
+The depth option is important to limit the amount of downloaded data since we
+don't need to have the history of these projects.
 
 ## Starting the server
 

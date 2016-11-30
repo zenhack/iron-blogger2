@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+#
 # Copyright 2014 Ian Denhardt <ian@zenhack.net>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -15,11 +17,21 @@
 
 from setuptools import setup, find_packages
 
+import os
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Grab description for Pypi
+with open(os.path.join(THIS_DIR, 'README.md')) as fhl:
+    description = fhl.read()
+
 setup(name='ironblogger',
-      version='0.1',
+      version='1.0',
       url='https://github.com/zenhack/iron-blogger2',
       packages=find_packages(),
+      description="Iron Blogger Web Service, compete blog to blog, week to week",
+      long_description=description,
       scripts=['scripts/ironblogger'],
+      license='GPLv3',
       install_requires=[
           'Flask',
           'Flask-Admin',
