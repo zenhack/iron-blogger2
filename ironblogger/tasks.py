@@ -138,7 +138,7 @@ def send_reminders():
         "\n"
         "Just a friendly reminder that this week's Iron Blogger deadline is\n"
         "approaching. If you haven't posted this week already, you should\n"
-        "probably get on that!.\n"
+        "probably get on that!\n"
         "\n"
         "Yours truly,\n"
         "\n"
