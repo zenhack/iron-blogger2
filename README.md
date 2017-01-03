@@ -37,7 +37,7 @@ for the database, and run `ironblogger init-db`
 
 ## Static assets
 
-Static assets have been submoduled and are kept in 
+Static assets have been submoduled and are kept in
 `ironblogger/static/bower_components`, which used to be managed by Bower, which
 is why it has that name.
 
