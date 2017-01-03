@@ -25,7 +25,7 @@ preferred, and there's a rule in `.gitignore` which will keep you from
 accidentally committing it to the repository. The first pip command
 installs ironblogger in "editable" mode, so that changes you make to the
 source tree will be picked up automatically. The second installs
-dependencies for running the test suite. The rest of this document
+dependencies for running the test suite.
 
 Copy `example.wsgi.py` to `wsgi.py` and edit the configuration therein.
 The `ironblogger` command described below must be run from within the
